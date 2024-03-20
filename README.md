@@ -6,3 +6,4 @@ Some termux scripts created by me for easier Installation of tools
 
   NOTE: A PR to this script has already been merged to the repo and can be installed from there also
 - **flutter-spy.sh:** Install [anasfik/flutter-spy](https://github.com/anasfik/flutter-spy) on Termux 🎉
+- **install_hermes.sh:** Install [hermes](https://github.com/facebook/hermes) to termux easily. Also used in [termux-hermes](https://github.com/AbhiTheModder/termux-hermes)
