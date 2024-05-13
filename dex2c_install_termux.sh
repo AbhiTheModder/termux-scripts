@@ -22,7 +22,9 @@ echo "${green}━━━ Basic Requirements Setup ━━━${nocolor}"
 
 pkg install -y python git cmake rust clang make wget ndk-sysroot zlib libxml2 libxslt pkg-config libjpeg-turbo build-essential binutils openssl
 # UnComment below line if you face clang error during installation procedure
-_file=$(find $PREFIX/lib/python3.11/_sysconfigdata*.py) && rm -rf $PREFIX/lib/python3.11/__pycache__ && sed -i 's|-fno-openmp-implicit-rpath||g' "$_file"
+_file=$(find $PREFIX/lib/python3.11/_sysconfigdata*.py)
+rm -rf $PREFIX/lib/python3.11/__pycache__
+sed -i 's|-fno-openmp-implicit-rpath||g' "$_file"
 pkg install -y python-cryptography
 LDFLAGS="-L${PREFIX}/lib/" CFLAGS="-I${PREFIX}/include/" pip install --upgrade wheel pillow
 pip install cython setuptools
