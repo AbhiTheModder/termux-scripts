@@ -29,11 +29,11 @@ if [ -d "$PREFIX/lib/jadx" ]; then
   echo "${red}Seems like JADX is already installed, skipping...${nocolor}"
 else
   cd $HOME
-  wget https://github.com/skylot/jadx/releases/download/v1.4.7/jadx-1.4.7.zip
+  wget https://github.com/skylot/jadx/releases/download/v1.5.0/jadx-1.5.0.zip
   mkdir -p $PREFIX/lib/jadx
-  unzip jadx-1.4.7.zip -d $PREFIX/lib/jadx
+  unzip jadx-1.5.0.zip -d $PREFIX/lib/jadx
 fi
-echo "${yellow}ANDROID SDK TOOLS Successfully Installed!${nocolor}"
+echo "${yellow}JADX Successfully Installed!${nocolor}"
 
 echo "${green}━━━ Starting SDK Tools installation ━━━${nocolor}"
 if [ -d "android-sdk" ]; then
@@ -57,7 +57,7 @@ echo "${green}━━━ Setting up apktool ━━━${nocolor}"
 if [ -f "$PREFIX/bin/apktool.jar" ]; then
   echo "${blue}apktool is already installed${nocolor}"
 else
-  sh -c 'wget https://bitbucket.org/iBotPeaches/apktool/downloads/apktool_2.9.1.jar -O $PREFIX/bin/apktool.jar'
+  sh -c 'wget https://bitbucket.org/iBotPeaches/apktool/downloads/apktool_2.9.3.jar -O $PREFIX/bin/apktool.jar'
   
   chmod +r $PREFIX/bin/apktool.jar
   
@@ -89,9 +89,7 @@ export ANDROID_HOME=$HOME/android-sdk
 export PATH=$PATH:$HOME/android-sdk/cmdline-tools/latest/bin
 export PATH=$PATH:$HOME/android-sdk/platform-tools
 export PATH=$PATH:$HOME/android-sdk/build-tools/34.0.4
-export PATH=$PATH:$HOME/android-sdk/ndk/$ndk_version
 export PATH=$PATH:$PREFIX/lib/jadx/bin
-export ANDROID_NDK_ROOT=$HOME/android-sdk/ndk/$ndk_version
 EOL
 elif [ -f "~/.zshrc" ]; then
   cat <<- EOL >> ~/.zshrc
@@ -99,9 +97,7 @@ export ANDROID_HOME=$HOME/android-sdk
 export PATH=$PATH:$HOME/android-sdk/cmdline-tools/latest/bin
 export PATH=$PATH:$HOME/android-sdk/platform-tools
 export PATH=$PATH:$HOME/android-sdk/build-tools/34.0.4
-export PATH=$PATH:$HOME/android-sdk/ndk/$ndk_version
 export PATH=$PATH:$PREFIX/lib/jadx/bin
-export ANDROID_NDK_ROOT=$HOME/android-sdk/ndk/$ndk_version
 EOL
 else
   cat <<- EOL >> $PREFIX/etc/bash.bashrc
@@ -109,8 +105,6 @@ export ANDROID_HOME=$HOME/android-sdk
 export PATH=$PATH:$HOME/android-sdk/cmdline-tools/latest/bin
 export PATH=$PATH:$HOME/android-sdk/platform-tools
 export PATH=$PATH:$HOME/android-sdk/build-tools/34.0.4
-export PATH=$PATH:$HOME/android-sdk/ndk/$ndk_version
 export PATH=$PATH:$PREFIX/lib/jadx/bin
-export ANDROID_NDK_ROOT=$HOME/android-sdk/ndk/$ndk_version
 EOL
 fi
