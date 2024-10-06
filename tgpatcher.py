@@ -6,8 +6,10 @@
 # Patch credits:  @Zylern_OP, @rezaAa1177, @AbhiTheModder and Nekogram
 
 
+import argparse
 import os
 import re
+import sys
 
 RED = "\033[0;31m"
 GREEN = "\033[0;32m"
