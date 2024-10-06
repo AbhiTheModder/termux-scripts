@@ -84,8 +84,8 @@ jobs:
         if: env.new_version_available == 'true'
         run: |
           java -jar apktool.jar d Telegram.apk -f
-          echo "Applying Normal Patches..."
-          python3 tgpatcher.py --normal --dir Telegram/
+          echo "Applying Anti+Normal Patches..."
+          python3 tgpatcher.py --anti --dir Telegram/
           echo "Patches applied, building apk..."
           java -jar apktool.jar b Telegram/ -o Telegram_Anti_Patched.apk
           echo "NOTE: apk may not be signed, you may need to sign it manually."
