@@ -25,13 +25,17 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: sudo apt-get install -y wget zipalign
+        run: sudo apt-get install -y wget zipalign aapt
+
+      - name: Download Telegram APK
+        run: |
+          tg_apk_url="https://telegram.org/dl/android/apk"
+          wget -q --show-progress $tg_apk_url -O Telegram.apk
 
       - name: Get latest Telegram version
         id: get_version
         run: |
-          url="https://api.github.com/repos/DrKLO/Telegram/releases/latest"
-          curl -s $url | grep -oP '"tag_name": "\K(.*)(?=")' > tg_version.txt
+          aapt dump badging Telegram.apk | grep -oP "versionName='[^']*" | cut -d "'" -f2 > tg_version.txt
           echo "Latest version: $(cat tg_version.txt)"
         
       - name: Check if new version is available
@@ -50,14 +54,6 @@ jobs:
           else
             echo "new_version_available=false" >> $GITHUB_ENV
           fi
-
-      - name: Download Telegram APK
-        if: env.new_version_available == 'true'
-        run: |
-          tg_apk_url="https://telegram.org/dl/android/apk"
-          echo "New version available: $(cat tg_version.txt)"
-          echo "Downloading Latest Telegram apk..."
-          wget -q --show-progress $tg_apk_url -O Telegram.apk
 
       - name: Download apktool
         if: env.new_version_available == 'true'
@@ -123,6 +119,7 @@ jobs:
           message: |
             <b>Telegram [ Premium ][ Local+ ][ Update ][ Direct ][ Normal ]</b>
             <b>Architecture :</b> Arm + Arm64
+            <b>Version :</b> ${{ env.version }}
             
             <b>Requirements:</b> Android 6.0 and up
             <b>Overview:</b>
@@ -148,6 +145,7 @@ jobs:
           message: |
             <b>Telegram [ Premium ][ Local+ ][ Update ][ Direct ][ Anti ]</b>
             <b>Architecture :</b> Arm + Arm64
+            <b>Version :</b> ${{ env.version }}
             
             <b>Requirements:</b> Android 6.0 and up
             <b>Overview:</b>
