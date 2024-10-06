@@ -144,7 +144,7 @@ jobs:
         if: env.new_version_available == 'true'
         uses: appleboy/telegram-action@master
         with:
-          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          to: "${{ secrets.TELEGRAM_CHAT_ID }},${{ secrets.TELEGRAM_CHAT_ID_2 }}"
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           format: HTML
           message: |
