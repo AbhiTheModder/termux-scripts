@@ -16,5 +16,7 @@ Some termux scripts created by me for easier Installation of tools
       wget https://maglit.me/frida-python && bash frida-python
     ```
 - **tgpatcher.py:** Patch script for applying patches to Telegram
+
+This repo also hosts the github workflow to automate this script and for version checking it stores old version into file named `backup_tg_version.py`.
 > [!NOTE]
 > First decompile your apk using apktool or APKEditor.
