@@ -110,52 +110,6 @@ jobs:
         id: set_version
         run: echo "version=$(cat tg_version.txt)" >> $GITHUB_ENV
 
-      - name: Update version files and commit changes
-        if: env.new_version_available == 'true'
-        run: |
-          cp tg_version.txt backup_tg_version.txt
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add backup_tg_version.txt
-          git commit -m "Update version files to $(cat tg_version.txt)"
-          git push
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create GitHub Release
-        if: env.new_version_available == 'true'
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ env.version }}
-          release_name: Telegram Patch ${{ env.version }}
-          draft: false
-          prerelease: false
-
-      - name: Upload Normal Patched APK to Release
-        if: env.new_version_available == 'true'
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: Telegram_Patched.apk
-          asset_name: Telegram_Patched.apk
-          asset_content_type: application/vnd.android.package-archive
-
-      - name: Upload Anti-Patched APK to Release
-        if: env.new_version_available == 'true'
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./Telegram_Anti_Patched.apk
-          asset_name: Telegram_Anti_Patched.apk
-          asset_content_type: application/vnd.android.package-archive
-
       - name: Notify Telegram about new release
         if: env.new_version_available == 'true'
         uses: appleboy/telegram-action@master
@@ -181,3 +135,18 @@ jobs:
             The patched APK file is available for download at the link below.
             <a href="https://github.com/AbhiTheModder/termux-scripts/releases/latest/download/Telegram_Patched.apk">Download Normal Patched APK</a>
             <a href="https://github.com/AbhiTheModder/termux-scripts/releases/latest/download/Telegram_Anti_Patched.apk">Download Anti+Normal Patched APK</a>
+          document: |
+            Telegram_Patched.apk
+            Telegram_Anti_Patched.apk
+
+      - name: Update version files and commit changes
+        if: env.new_version_available == 'true'
+        run: |
+          cp tg_version.txt backup_tg_version.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add backup_tg_version.txt
+          git commit -m "Update version files to $(cat tg_version.txt)"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
