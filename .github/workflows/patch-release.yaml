@@ -90,6 +90,10 @@ jobs:
           java -jar apktool.jar b Telegram/ -o Telegram_Anti_Patched.apk
           echo "NOTE: apk may not be signed, you may need to sign it manually."
 
+      - name: Set Telegram Version
+        id: set_version
+        run: echo "version=$(cat tg_version.txt)" >> $GITHUB_ENV
+
       - name: Update version files and commit changes
         if: env.new_version_available == 'true'
         run: |
@@ -101,10 +105,6 @@ jobs:
           git push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set Telegram Version
-        id: set_version
-        run: echo "version=$(cat tg_version.txt)" >> $GITHUB_ENV
 
       - name: Create GitHub Release
         if: env.new_version_available == 'true'
@@ -153,4 +153,5 @@ jobs:
             commit: <a href="https://github.com/AbhiTheModder/termux-scripts/commit/${{ github.sha }}">${{ github.sha }}</a>
             repo: <a href="https://github.com/AbhiTheModder/termux-scripts">AbhiTheModder/termux-scripts</a>
             The patched APK file is available for download at the link below.
-            <a href="https://github.com/AbhiTheModder/termux-scripts/releases/latest/download/Telegram_Patched.apk">Download Patched APK</a>
+            <a href="https://github.com/AbhiTheModder/termux-scripts/releases/latest/download/Telegram_Patched.apk">Download Normal Patched APK</a>
+            <a href="https://github.com/AbhiTheModder/termux-scripts/releases/latest/download/Telegram_Anti_Patched.apk">Download Normal Patched APK</a>
