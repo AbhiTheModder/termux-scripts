@@ -69,7 +69,9 @@ jobs:
 
       - name: Decompile APK
         if: env.new_version_available == 'true'
-        run: java -jar apktool.jar d Telegram.apk -f
+        run: |
+          java -jar apktool.jar d Telegram.apk -f
+          rm -rf Telegram/lib/x86*
 
       - name: Apply Normal Patches
         if: env.new_version_available == 'true'
@@ -84,6 +86,7 @@ jobs:
         if: env.new_version_available == 'true'
         run: |
           java -jar apktool.jar d Telegram.apk -f
+          rm -rf Telegram/lib/x86*
           echo "Applying Anti+Normal Patches..."
           python3 tgpatcher.py --anti --dir Telegram/
           echo "Patches applied, building apk..."
@@ -110,6 +113,58 @@ jobs:
         id: set_version
         run: echo "version=$(cat tg_version.txt)" >> $GITHUB_ENV
 
+      - name: Send Normal APK to Telegram
+        if: env.new_version_available == 'true'
+        uses: appleboy/telegram-action@master
+        with:
+          to: "${{ secrets.TELEGRAM_CHAT_ID }},${{ secrets.TELEGRAM_CHAT_ID_2 }}"
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          format: HTML
+          message: |
+            <b>Telegram [ Premium ][ Local+ ][ Update ][ Direct ][ Normal ]</b>
+            <b>Architecture :</b> Arm + Arm64
+            
+            <b>Requirements:</b> Android 6.0 and up
+            <b>Overview:</b>
+            Telegram is a messaging app with a focus on speed and security.
+            
+            
+            <b>❏Changelogs:</b>
+            ● See <a href="https://telegra.ph/Telegram-premium-08-16-5"> Full Changelogs</a>
+            
+            project: Telegram Auto-Patcher
+            status: New version patched successfully!
+            repo: <a href="https://github.com/AbhiTheModder/termux-scripts">AbhiTheModder/termux-scripts</a>
+            The patched APK file is available for download below.
+          document: Telegram_Patched.apk
+
+      - name: Send Anti APK to Telegram
+        if: env.new_version_available == 'true'
+        uses: appleboy/telegram-action@master
+        with:
+          to: "${{ secrets.TELEGRAM_CHAT_ID }},${{ secrets.TELEGRAM_CHAT_ID_2 }}"
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          format: HTML
+          message: |
+            <b>Telegram [ Premium ][ Local+ ][ Update ][ Direct ][ Anti ]</b>
+            <b>Architecture :</b> Arm + Arm64
+            
+            <b>Requirements:</b> Android 6.0 and up
+            <b>Overview:</b>
+            Telegram is a messaging app with a focus on speed and security.
+            
+            
+            <b>❏Changelogs:</b>
+            ● See <a href="https://telegra.ph/Telegram-premium-08-16-5"> Full Changelogs</a>
+            ● Everything included in Normal mod and: 
+            - Anti Messages Delete
+            
+            project: Telegram Auto-Patcher
+            status: New version patched successfully!
+            repo: <a href="https://github.com/AbhiTheModder/termux-scripts">AbhiTheModder/termux-scripts</a>
+            The patched APK file is available for download below.
+          document: Telegram_Anti_Patched.apk
+
       - name: Update version files and commit changes
         if: env.new_version_available == 'true'
         run: |
@@ -121,63 +176,3 @@ jobs:
           git push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create GitHub Release
-        if: env.new_version_available == 'true'
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ env.version }}
-          release_name: Telegram Patch ${{ env.version }}
-          draft: false
-          prerelease: false
-
-      - name: Upload Normal Patched APK to Release
-        if: env.new_version_available == 'true'
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: Telegram_Patched.apk
-          asset_name: Telegram_Patched.apk
-          asset_content_type: application/vnd.android.package-archive
-
-      - name: Upload Anti-Patched APK to Release
-        if: env.new_version_available == 'true'
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./Telegram_Anti_Patched.apk
-          asset_name: Telegram_Anti_Patched.apk
-          asset_content_type: application/vnd.android.package-archive
-
-      - name: Notify Telegram about new release
-        if: env.new_version_available == 'true'
-        uses: appleboy/telegram-action@master
-        with:
-          to: "${{ secrets.TELEGRAM_CHAT_ID }},${{ secrets.TELEGRAM_CHAT_ID_2 }}"
-          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          format: HTML
-          message: |
-            Telegram [ Premium ][ Local+ ][ Update ][ Direct ][ Normal ] & [Anti]
-            Architecture : Arm + Arm64
-            
-            Requirements: Android 6.0 and up
-            Overview:
-            Telegram is a messaging app with a focus on speed and security.
-            
-            
-            ❏Changelogs: 
-            ● See <a href="https://telegra.ph/Telegram-premium-08-16-5"> Full Changelogs</a>
-            
-            project: Telegram Auto-Patcher
-            status: New version patched successfully!
-            repo: <a href="https://github.com/AbhiTheModder/termux-scripts">AbhiTheModder/termux-scripts</a>
-            The patched APK file is available for download at the link below.
-            <a href="https://github.com/AbhiTheModder/termux-scripts/releases/latest/download/Telegram_Patched.apk">Download Normal Patched APK</a>
-            <a href="https://github.com/AbhiTheModder/termux-scripts/releases/latest/download/Telegram_Anti_Patched.apk">Download Anti+Normal Patched APK</a>
