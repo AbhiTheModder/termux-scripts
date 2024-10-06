@@ -104,7 +104,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ env.version }}
-          release_name: "Telegram Patch $(cat tg_version.txt)"
+          release_name: Telegram Patch ${{ env.version }}
           draft: false
           prerelease: false
 
