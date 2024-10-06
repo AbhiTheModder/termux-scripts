@@ -670,13 +670,14 @@ def apply_patches(patches, exclude=None):
             value[1]()
 
 
-def main():
+def main(selected_patch=None, root_directory=None):
     """Main function to handle user input and apply patches."""
 
-    root_directory = (
-        input("Give me the decompiled directory path (Default is 'Telegram'):")
-        or "Telegram"
-    )
+    if root_directory == "Telegram":
+        root_directory = (
+            input("Give me the decompiled directory path (Default is 'Telegram'):")
+            or root_directory
+        )
 
     patches = {
         "0": (
@@ -797,20 +798,54 @@ def main():
         ),
     }
 
-    print("Select patches to apply (comma-separated):")
-    for key, (description, _) in patches.items():
-        print(f"{key}: {description}")
+    if not selected_patch:
+        print("Select patches to apply (comma-separated):")
+        for key, (description, _) in patches.items():
+            print(f"{key}: {description}")
 
-    selected_patches = input("Enter patch numbers: ").split(",")
-    selected_patches = [patch.strip() for patch in selected_patches]
+        selected_patches = input("Enter patch numbers: ").split(",")
+        selected_patches = [patch.strip() for patch in selected_patches]
+    else:
+        selected_patches = [selected_patch]
 
     for patch in selected_patches:
         if patch in patches:
-            print(f"{YELLOW}START: {NC}Applying patch {patch}: {patches[patch][0]}")
+            print(
+                f"{YELLOW}START: {NC}Applying patch {patch}: {BLUE}{patches[patch][0]}{NC}"
+            )
             patches[patch][1]()
         else:
             print(f"{RED}ERROR: {NC}Invalid patch number: {patch}")
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(
+        prog="tgpatcher", description="Telegram Patches (Mod) Applier"
+    )
+
+    parser.add_argument(
+        "--normal",
+        help="Normal Mod Patches",
+        required=False,
+        action=argparse.BooleanOptionalAction,
+    )
+    parser.add_argument(
+        "--anti",
+        help="Normal + Anti Mod Patches",
+        required=False,
+        action=argparse.BooleanOptionalAction,
+    )
+    parser.add_argument("--dir", help="Specify the directory", required=False, default="Telegram")
+
+    args = parser.parse_args()
+
+    try:
+        if args.normal:
+            main(selected_patch="0", root_directory=args.dir)
+        elif args.anti:
+            main(selected_patch="00", root_directory=args.dir)
+        else:
+            main(root_directory=args.dir)
+    except KeyboardInterrupt:
+        print(f"\n{RED}ERROR: {NC}Script interrupted by user.")
+        sys.exit(1)
