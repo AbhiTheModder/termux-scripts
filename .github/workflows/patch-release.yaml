@@ -90,7 +90,28 @@ jobs:
           git commit -m "Update version files to $(cat tg_version.txt)"
           git push
 
-      - name: Notify and send patched APK to Telegram
+      - name: Upload Patched APK to x0.at
+        if: env.new_version_available == 'true'
+        id: upload_apk
+        run: |
+          response=$(curl -F "file=@Telegram_Patched.apk" https://x0.at/)
+          echo "upload_url=$response" >> $GITHUB_ENV
+
+      - name: Calculate Expiration Date
+        if: env.new_version_available == 'true'
+        id: calculate_expiration
+        run: |
+          FILE_SIZE=$(stat -c%s "Telegram_Patched.apk")
+          MAX_SIZE=$((222 * 1024 * 1024)) # 222 MiB in bytes
+          MIN_AGE=3
+          MAX_AGE=100
+          SCALE=2
+          FILE_SIZE_RATIO=$(echo "$FILE_SIZE/$MAX_SIZE" | bc -l)
+          EXPIRATION_DAYS=$(echo "$MIN_AGE + ($MAX_AGE - $MIN_AGE) * (1 - $FILE_SIZE_RATIO)^2" | bc -l)
+          EXPIRATION_DAYS=$(printf "%.0f" "$EXPIRATION_DAYS")
+          echo "expiration_days=$EXPIRATION_DAYS" >> $GITHUB_ENV
+
+      - name: Notify Telegram about new release
         if: env.new_version_available == 'true'
         uses: appleboy/telegram-action@master
         with:
@@ -98,10 +119,10 @@ jobs:
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           format: HTML
           message: |
-            project: Telegram Auto-Patcher
-            version: $(cat tg_version.txt)
-            status: New version patched successfully!
-            commit: <a href="https://github.com/${{ github.repository }}/commit/${{ github.sha }}">${{ github.sha }}</a>
-            repo: <a href="https://github.com/${{ github.repository }}">${{ github.repository }}</a>
-            message: The patched APK file is attached below.
-          document: Telegram_Patched.apk
+            <b>project:</b> Telegram Auto-Patcher
+            <b>status:</b> New version patched successfully!
+            <b>commit:</b> <a href="https://github.com/AbhiTheModder/termux-scripts/commit/${{ github.sha }}">${{ github.sha }}</a>
+            <b>repo:</b> <a href="https://github.com/AbhiTheModder/termux-scripts">AbhiTheModder/termux-scripts</a>
+            The patched APK file is available for download at the link below.
+            <a href="${{ env.upload_url }}">Download Patched APK</a>
+            The file will be available for approximately <code>${{ env.expiration_days }}</code> days.
