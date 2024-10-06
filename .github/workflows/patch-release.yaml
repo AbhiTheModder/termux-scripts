@@ -1,0 +1,107 @@
+name: Telegram APK Auto-Patcher
+
+on:
+  schedule:
+    - cron: '0 */12 * * *'
+  workflow_dispatch:
+
+jobs:
+  auto_patch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'adopt'
+          java-version: '17'
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: sudo apt-get install -y wget
+
+      - name: Get latest Telegram version
+        id: get_version
+        run: |
+          url="https://api.github.com/repos/DrKLO/Telegram/releases/latest"
+          curl -s $url | grep -oP '"tag_name": "\K(.*)(?=")' > tg_version.txt
+          echo "Latest version: $(cat tg_version.txt)"
+        
+      - name: Check if new version is available
+        id: version_check
+        run: |
+          if [ -f backup_tg_version.txt ]; then
+            old_version=$(cat backup_tg_version.txt)
+          else
+            old_version=""
+          fi
+
+          new_version=$(cat tg_version.txt)
+
+          if [ "$new_version" != "$old_version" ]; then
+            echo "new_version_available=true" >> $GITHUB_ENV
+          else
+            echo "new_version_available=false" >> $GITHUB_ENV
+          fi
+
+      - name: Download Telegram APK
+        if: env.new_version_available == 'true'
+        run: |
+          tg_apk_url="https://telegram.org/dl/android/apk"
+          echo "New version available: $(cat tg_version.txt)"
+          echo "Downloading Latest Telegram apk..."
+          wget -q --show-progress $tg_apk_url -O Telegram.apk
+
+      - name: Download apktool
+        if: env.new_version_available == 'true'
+        run: |
+          if [ ! -f apktool.jar ]; then
+            echo "apktool.jar not found, downloading..."
+            wget -q --show-progress https://bitbucket.org/iBotPeaches/apktool/downloads/apktool_2.10.0.jar -O apktool.jar
+          fi
+
+      - name: Decompile APK
+        if: env.new_version_available == 'true'
+        run: java -jar apktool.jar d Telegram.apk -f
+
+      - name: Apply Patches
+        if: env.new_version_available == 'true'
+        run: |
+          echo "Applying Normal Patches..."
+          python3 tgpatcher.py --normal --dir Telegram/
+          echo "Patches applied, building apk..."
+          java -jar apktool.jar b Telegram/ -o Telegram_Patched.apk
+          echo "NOTE: apk may not be signed, you may need to sign it manually."
+
+      - name: Update version files and commit changes
+        if: env.new_version_available == 'true'
+        run: |
+          cp tg_version.txt backup_tg_version.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add tg_version.txt backup_tg_version.txt
+          git commit -m "Update version files to $(cat tg_version.txt)"
+          git push
+
+      - name: Notify and send patched APK to Telegram
+        if: env.new_version_available == 'true'
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          format: HTML
+          message: |
+            project: Telegram Auto-Patcher
+            version: $(cat tg_version.txt)
+            status: New version patched successfully!
+            commit: <a href="https://github.com/${{ github.repository }}/commit/${{ github.sha }}">${{ github.sha }}</a>
+            repo: <a href="https://github.com/${{ github.repository }}">${{ github.repository }}</a>
+            message: The patched APK file is attached below.
+          document: Telegram_Patched.apk
