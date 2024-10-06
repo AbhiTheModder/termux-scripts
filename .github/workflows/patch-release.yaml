@@ -148,10 +148,20 @@ jobs:
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           format: HTML
           message: |
+            Telegram [ Premium ][ Local+ ][ Update ][ Direct ][ Normal ] & [Anti]
+            Architecture : Arm + Arm64
+            
+            Requirements: Android 6.0 and up
+            Overview:
+            Telegram is a messaging app with a focus on speed and security.
+            
+            
+            ❏Changelogs: 
+            ● See <a href="https://telegra.ph/Telegram-premium-08-16-5"> Full Changelogs</a>
+            
             project: Telegram Auto-Patcher
             status: New version patched successfully!
-            commit: <a href="https://github.com/AbhiTheModder/termux-scripts/commit/${{ github.sha }}">${{ github.sha }}</a>
             repo: <a href="https://github.com/AbhiTheModder/termux-scripts">AbhiTheModder/termux-scripts</a>
             The patched APK file is available for download at the link below.
             <a href="https://github.com/AbhiTheModder/termux-scripts/releases/latest/download/Telegram_Patched.apk">Download Normal Patched APK</a>
-            <a href="https://github.com/AbhiTheModder/termux-scripts/releases/latest/download/Telegram_Anti_Patched.apk">Download Normal Patched APK</a>
+            <a href="https://github.com/AbhiTheModder/termux-scripts/releases/latest/download/Telegram_Anti_Patched.apk">Download Anti+Normal Patched APK</a>
