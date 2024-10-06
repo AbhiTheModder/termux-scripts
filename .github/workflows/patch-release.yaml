@@ -71,13 +71,23 @@ jobs:
         if: env.new_version_available == 'true'
         run: java -jar apktool.jar d Telegram.apk -f
 
-      - name: Apply Patches
+      - name: Apply Normal Patches
         if: env.new_version_available == 'true'
         run: |
           echo "Applying Normal Patches..."
           python3 tgpatcher.py --normal --dir Telegram/
           echo "Patches applied, building apk..."
           java -jar apktool.jar b Telegram/ -o Telegram_Patched.apk
+          echo "NOTE: apk may not be signed, you may need to sign it manually."
+
+      - name: Apply Anti+Normal Patches
+        if: env.new_version_available == 'true'
+        run: |
+          java -jar apktool.jar d Telegram.apk -f
+          echo "Applying Normal Patches..."
+          python3 tgpatcher.py --normal --dir Telegram/
+          echo "Patches applied, building apk..."
+          java -jar apktool.jar b Telegram/ -o Telegram_Anti_Patched.apk
           echo "NOTE: apk may not be signed, you may need to sign it manually."
 
       - name: Update version files and commit changes
@@ -108,7 +118,7 @@ jobs:
           draft: false
           prerelease: false
 
-      - name: Upload Patched APK to Release
+      - name: Upload Normal Patched APK to Release
         if: env.new_version_available == 'true'
         uses: actions/upload-release-asset@v1
         env:
@@ -117,6 +127,17 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: Telegram_Patched.apk
           asset_name: Telegram_Patched.apk
+          asset_content_type: application/vnd.android.package-archive
+
+      - name: Upload Anti-Patched APK to Release
+        if: env.new_version_available == 'true'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./Telegram_Anti_Patched.apk
+          asset_name: Telegram_Anti_Patched.apk
           asset_content_type: application/vnd.android.package-archive
 
       - name: Notify Telegram about new release
