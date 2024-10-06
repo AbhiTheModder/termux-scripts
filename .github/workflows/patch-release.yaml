@@ -89,6 +89,12 @@ jobs:
           git add backup_tg_version.txt
           git commit -m "Update version files to $(cat tg_version.txt)"
           git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set Telegram Version
+        id: set_version
+        run: echo "version=$(cat tg_version.txt)" >> $GITHUB_ENV
 
       - name: Create GitHub Release
         if: env.new_version_available == 'true'
@@ -97,8 +103,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: "v$(cat tg_version.txt)"
-          release_name: "Telegram Patch v$(cat tg_version.txt)"
+          tag_name: ${{ env.version }}
+          release_name: "Telegram Patch $(cat tg_version.txt)"
           draft: false
           prerelease: false
 
