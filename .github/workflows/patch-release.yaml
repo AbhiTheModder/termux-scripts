@@ -69,7 +69,9 @@ jobs:
 
       - name: Decompile APK
         if: env.new_version_available == 'true'
-        run: java -jar apktool.jar d Telegram.apk -f
+        run: |
+          java -jar apktool.jar d Telegram.apk -f
+          rm -rf Telegram/lib/x86*
 
       - name: Apply Normal Patches
         if: env.new_version_available == 'true'
@@ -84,6 +86,7 @@ jobs:
         if: env.new_version_available == 'true'
         run: |
           java -jar apktool.jar d Telegram.apk -f
+          rm -rf Telegram/lib/x86*
           echo "Applying Anti+Normal Patches..."
           python3 tgpatcher.py --anti --dir Telegram/
           echo "Patches applied, building apk..."
