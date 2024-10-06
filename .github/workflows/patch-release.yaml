@@ -25,7 +25,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: sudo apt-get install -y wget
+        run: sudo apt-get install -y wget zipalign
 
       - name: Get latest Telegram version
         id: get_version
@@ -89,6 +89,22 @@ jobs:
           echo "Patches applied, building apk..."
           java -jar apktool.jar b Telegram/ -o Telegram_Anti_Patched.apk
           echo "NOTE: apk may not be signed, you may need to sign it manually."
+
+      - name: ZipAlign APks
+        if: env.new_version_available == 'true'
+        run: |
+          zipalign -p -f 4 Telegram_Patched.apk Telegram_Patched_aligned.apk
+          rm Telegram_Patched.apk
+          zipalign -p -f 4 Telegram_Anti_Patched.apk Telegram_Anti_Patched_aligned.apk
+          rm Telegram_Anti_Patched.apk
+
+      - name: Sign APks
+        if: env.new_version_available == 'true'
+        run: |
+          java -jar keystore/apksigner.jar sign --in Telegram_Patched_aligned.apk --out Telegram_Patched.apk --ks keystore/debug.keystore --ks-key-alias androiddebugkey --ks-pass pass:android --key-pass pass:android --v1-signing-enabled true --v2-signing-enabled true --v3-signing-enabled true --v4-signing-enabled false
+          rm Telegram_Patched_aligned.apk
+          java -jar keystore/apksigner.jar sign --in Telegram_Anti_Patched_aligned.apk --out Telegram_Anti_Patched.apk --ks keystore/debug.keystore --ks-key-alias androiddebugkey --ks-pass pass:android --key-pass pass:android --v1-signing-enabled true --v2-signing-enabled true --v3-signing-enabled true --v4-signing-enabled false
+          rm Telegram_Anti_Patched_aligned.apk
 
       - name: Set Telegram Version
         id: set_version
