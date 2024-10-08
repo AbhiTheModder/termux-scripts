@@ -106,6 +106,7 @@ jobs:
           rm Telegram_Anti_Patched_aligned.apk
 
       - name: Set Telegram Version
+        if: env.new_version_available == 'true'
         id: set_version
         run: echo "version=$(cat tg_version.txt)" >> $GITHUB_ENV
 
