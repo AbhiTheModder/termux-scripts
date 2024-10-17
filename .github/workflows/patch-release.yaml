@@ -114,25 +114,30 @@ jobs:
         if: env.new_version_available == 'true'
         uses: appleboy/telegram-action@master
         with:
+          disable_web_page_preview: true
           to: "${{ secrets.TELEGRAM_CHAT_ID }},${{ secrets.TELEGRAM_CHAT_ID_2 }},${{ secrets.TELEGRAM_CHAT_ID_3 }}"
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          format: HTML
+          format: MARKDOWN
           message: |
-            <b>Telegram [ Premium ][ Local+ ][ Update ][ Direct ][ Normal ]</b>
-            <b>Architecture :</b> Arm + Arm64
-            <b>Version :</b> ${{ env.version }}
+            **Telegram [ Premium ][ Local+ ][ Direct ][ Normal ]**
+            **Version :** ${{ env.version }}
+            **Architecture :** Arm + Arm64
             
-            <b>Requirements:</b> Android 6.0 and up
-            <b>Overview:</b>
+            **Requirements:** Android 6.0 and up
+            **Overview:**
             Telegram is a messaging app with a focus on speed and security.
             
             
-            <b>❏Changelogs:</b>
-            ● See <a href="https://telegra.ph/Telegram-premium-08-16-5"> Full Changelogs</a>
+            **❏Changelogs:**
+            ● See [Full Changelogs](https://telegra.ph/Telegram-premium-08-16-5)
             
-            project: Telegram Auto-Patcher
-            status: New version patched successfully!
-            repo: <a href="https://github.com/AbhiTheModder/termux-scripts">AbhiTheModder/termux-scripts</a>
+            👉 **How to Save/Forward from copyrighted channels:** [Watch Here](https://youtu.be/TIlxcnzC-mM)
+
+            **NOTE:**
+              - If you're **facing issue during login** like internal error, not getting OTP then **download Telegram X** from   play store -> Login in it -> come back and login to mod
+              - Adding stories functionality gets unlocked with premium mod, but
+                - If you still didn't get the story feature, [read more about it here](http://tginfo.me/stories-by-countries)
+
             The patched APK file is available for download below.
           document: Telegram_Patched.apk
 
@@ -140,27 +145,32 @@ jobs:
         if: env.new_version_available == 'true'
         uses: appleboy/telegram-action@master
         with:
+          disable_web_page_preview: true
           to: "${{ secrets.TELEGRAM_CHAT_ID }},${{ secrets.TELEGRAM_CHAT_ID_2 }},${{ secrets.TELEGRAM_CHAT_ID_3 }}"
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          format: HTML
+          format: MARKDOWN
           message: |
-            <b>Telegram [ Premium ][ Local+ ][ Update ][ Direct ][ Anti ]</b>
-            <b>Architecture :</b> Arm + Arm64
-            <b>Version :</b> ${{ env.version }}
+            **Telegram [ Premium ][ Local+ ][ Direct ][ Anti ]**
+            **Version :** ${{ env.version }}
+            **Architecture :** Arm + Arm64
             
-            <b>Requirements:</b> Android 6.0 and up
-            <b>Overview:</b>
+            **Requirements:** Android 6.0 and up
+            **Overview:**
             Telegram is a messaging app with a focus on speed and security.
             
             
-            <b>❏Changelogs:</b>
+            **❏Changelogs:**
             ● See <a href="https://telegra.ph/Telegram-premium-08-16-5"> Full Changelogs</a>
             ● Everything included in Normal mod and: 
             - Anti Messages Delete
             
-            project: Telegram Auto-Patcher
-            status: New version patched successfully!
-            repo: <a href="https://github.com/AbhiTheModder/termux-scripts">AbhiTheModder/termux-scripts</a>
+            👉 **How to Save/Forward from copyrighted channels:** [Watch Here](https://youtu.be/TIlxcnzC-mM)
+
+            **NOTE:**
+              - If you're **facing issue during login** like internal error, not getting OTP then **download Telegram X** from   play store -> Login in it -> come back and login to mod
+              - Adding stories functionality gets unlocked with premium mod, but
+                - If you still didn't get the story feature, [read more about it here](http://tginfo.me/stories-by-countries)
+
             The patched APK file is available for download below.
           document: Telegram_Anti_Patched.apk
 
