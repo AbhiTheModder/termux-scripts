@@ -115,7 +115,7 @@ jobs:
         uses: appleboy/telegram-action@master
         with:
           disable_web_page_preview: true
-          to: "${{ secrets.TELEGRAM_CHAT_ID }},${{ secrets.TELEGRAM_CHAT_ID_2 }},${{ secrets.TELEGRAM_CHAT_ID_3 }}"
+          to: "${{ secrets.TELEGRAM_CHAT_ID }},${{ secrets.TELEGRAM_CHAT_ID_2 }}"
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           format: MARKDOWN
           message: |
@@ -148,7 +148,7 @@ jobs:
         uses: appleboy/telegram-action@master
         with:
           disable_web_page_preview: true
-          to: "${{ secrets.TELEGRAM_CHAT_ID }},${{ secrets.TELEGRAM_CHAT_ID_2 }},${{ secrets.TELEGRAM_CHAT_ID_3 }}"
+          to: "${{ secrets.TELEGRAM_CHAT_ID }},${{ secrets.TELEGRAM_CHAT_ID_2 }}"
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           format: MARKDOWN
           message: |
