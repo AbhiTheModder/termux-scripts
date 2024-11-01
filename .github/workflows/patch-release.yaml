@@ -110,6 +110,10 @@ jobs:
         id: set_version
         run: echo "version=$(cat tg_version.txt)" >> $GITHUB_ENV
 
+      - name: Install upload requirements
+        if: env.new_version_available == 'true'
+        run: pip install pyrofork tgcrypto
+
       - name: Send Normal APK to Telegram
         if: env.new_version_available == 'true'
         run: |
