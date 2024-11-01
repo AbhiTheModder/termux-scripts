@@ -1,5 +1,5 @@
 # termux-scripts
-Some termux scripts created by me for easier Installation of tools 
+Some termux scripts created for easier installation & usages of tools
 
 # Contents
 1. **dex2c_install_termux.sh:** Install [codehasan/dex2c](https://github.com/ratsan/dex2c) on Termux without issues/hassle
