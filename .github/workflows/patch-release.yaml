@@ -112,71 +112,65 @@ jobs:
 
       - name: Send Normal APK to Telegram
         if: env.new_version_available == 'true'
-        uses: appleboy/telegram-action@master
-        with:
-          disable_web_page_preview: true
-          to: "${{ secrets.TELEGRAM_CHAT_ID }},${{ secrets.TELEGRAM_CHAT_ID_2 }}"
-          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          format: MARKDOWN
-          message: |
-            **Telegram [ Premium ][ Local+ ][ Direct ][ Normal ]**
-            **Version :** ${{ env.version }}
-            **Architecture :** Arm + Arm64
-            
-            **Requirements:** Android 6.0 and up
-            **Overview:**
-            Telegram is a messaging app with a focus on speed and security.
-            
-            
-            **❏Changelogs:**
-            ● See [Full Changelogs](https://telegra.ph/Telegram-premium-08-16-5)
-
-            - **Released by [`Abhi`]**
-            
-            👉 **How to Save/Forward from copyrighted channels:** [Watch Here](https://youtu.be/TIlxcnzC-mM)
-
-            **NOTE:**
-              - If you're **facing issue during login** like internal error, not getting OTP then **download Telegram X** from   play store -> Login in it -> come back and login to mod
-              - Adding stories functionality gets unlocked with premium mod, but
-                - If you still didn't get the story feature, [read more about it here](http://tginfo.me/stories-by-countries)
-
-            The patched APK file is available for download below.
-          document: Telegram_Patched.apk
+        run: |
+          export BOT_TOKEN=${{ secrets.BOT_TOKEN }}
+          export API_ID=${{ secrets.API_ID }}
+          export API_HASH=${{ secrets.API_HASH }}
+          python3 tgupload.py Telegram_Patched_aligned.apk --chat-id ${{ secrets.CHAT_ID }} --caption "$(cat <<EOF
+          **Telegram [ Premium ] [ Local+ ] [ Direct ] [ Normal ]**
+          **Version :** ${{ env.version }}
+          **Architecture :** Arm + Arm64
+          
+          **Requirements:** Android 6.0 and up
+          **Overview:**
+          Telegram is a messaging app with a focus on speed and security.
+          
+          **❏Changelogs:**
+          ● See [Full Changelogs](https://telegra.ph/Telegram-premium-08-16-5)
+          
+          - **Released by [ Abhi ]**
+          
+          👉 **How to Save/Forward from copyrighted channels:** [Watch Here](https://youtu.be/TIlxcnzC-mM)
+          
+          **NOTE:**
+            - If you're **facing issue during login** like internal error, not getting OTP then **download Telegram X** from play store -> Login in it -> come back and login to mod
+            - Adding stories functionality gets unlocked with premium mod, but
+              - If you still didn't get the story feature, [read more about it here](http://tginfo.me/stories-by-countries)
+          
+          The patched APK file is available for download below.
+          EOF
+          )"
 
       - name: Send Anti APK to Telegram
         if: env.new_version_available == 'true'
-        uses: appleboy/telegram-action@master
-        with:
-          disable_web_page_preview: true
-          to: "${{ secrets.TELEGRAM_CHAT_ID }},${{ secrets.TELEGRAM_CHAT_ID_2 }}"
-          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          format: MARKDOWN
-          message: |
-            **Telegram [ Premium ][ Local+ ][ Direct ][ Anti ]**
-            **Version :** ${{ env.version }}
-            **Architecture :** Arm + Arm64
-            
-            **Requirements:** Android 6.0 and up
-            **Overview:**
-            Telegram is a messaging app with a focus on speed and security.
-            
-            
-            **❏Changelogs:**
-            ● See <a href="https://telegra.ph/Telegram-premium-08-16-5"> Full Changelogs</a>
-            ● Everything included in Normal mod and: 
-            - Anti Messages Delete
-
-            - **Released by [`Abhi`]**
-            
-            👉 **How to Save/Forward from copyrighted channels:** [Watch Here](https://youtu.be/TIlxcnzC-mM)
-
-            **NOTE:**
-              - If you're **facing issue during login** like internal error, not getting OTP then **download Telegram X** from   play store -> Login in it -> come back and login to mod
-              - Adding stories functionality gets unlocked with premium mod, but
-                - If you still didn't get the story feature, [read more about it here](http://tginfo.me/stories-by-countries)
-
-            The patched APK file is available for download below.
-          document: Telegram_Anti_Patched.apk
+        run: |
+          export BOT_TOKEN=${{ secrets.BOT_TOKEN }}
+          export API_ID=${{ secrets.API_ID }}
+          export API_HASH=${{ secrets.API_HASH }}
+          python3 tgupload.py Telegram_Patched_aligned.apk --chat-id ${{ secrets.CHAT_ID }} --caption "$(cat <<EOF
+          **Telegram [ Premium ] [ Local+ ] [ Direct ] [ Anti ]**
+          **Version :** ${{ env.version }}
+          **Architecture :** Arm + Arm64
+          
+          **Requirements:** Android 6.0 and up
+          **Overview:**
+          Telegram is a messaging app with a focus on speed and security.
+          
+          **❏Changelogs:**
+          ● See [Full Changelogs](https://telegra.ph/Telegram-premium-08-16-5)
+          
+          - **Released by [ Abhi ]**
+          
+          👉 **How to Save/Forward from copyrighted channels:** [Watch Here](https://youtu.be/TIlxcnzC-mM)
+          
+          **NOTE:**
+            - If you're **facing issue during login** like internal error, not getting OTP then **download Telegram X** from play store -> Login in it -> come back and login to mod
+            - Adding stories functionality gets unlocked with premium mod, but
+              - If you still didn't get the story feature, [read more about it here](http://tginfo.me/stories-by-countries)
+          
+          The patched APK file is available for download below.
+          EOF
+          )"
 
       - name: Update version files and commit changes
         if: env.new_version_available == 'true'
