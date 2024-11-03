@@ -120,7 +120,7 @@ jobs:
           export BOT_TOKEN=${{ secrets.BOT_TOKEN }}
           export API_ID=${{ secrets.API_ID }}
           export API_HASH=${{ secrets.API_HASH }}
-          python3 tgupload.py Telegram_Patched_aligned.apk --chat-id ${{ secrets.CHAT_ID }} --caption "$(cat <<EOF
+          python3 tgupload.py Telegram_Patched.apk --chat-id ${{ secrets.CHAT_ID }} --caption "$(cat <<EOF
           **Telegram [ Premium ] [ Local+ ] [ Direct ] [ Normal ]**
           **Version :** ${{ env.version }}
           **Architecture :** Arm + Arm64
@@ -151,7 +151,7 @@ jobs:
           export BOT_TOKEN=${{ secrets.BOT_TOKEN }}
           export API_ID=${{ secrets.API_ID }}
           export API_HASH=${{ secrets.API_HASH }}
-          python3 tgupload.py Telegram_Patched_aligned.apk --chat-id ${{ secrets.CHAT_ID }} --caption "$(cat <<EOF
+          python3 tgupload.py Telegram_Anti_Patched.apk --chat-id ${{ secrets.CHAT_ID }} --caption "$(cat <<EOF
           **Telegram [ Premium ] [ Local+ ] [ Direct ] [ Anti ]**
           **Version :** ${{ env.version }}
           **Architecture :** Arm + Arm64
