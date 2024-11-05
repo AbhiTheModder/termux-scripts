@@ -22,13 +22,13 @@ echo "${green}━━━ Basic Requirements Setup ━━━${nocolor}"
 
 pkg install -y python git cmake rust clang make wget ndk-sysroot zlib libxml2 libxslt pkg-config libjpeg-turbo build-essential binutils openssl
 # UnComment below line if you face clang error during installation procedure
-_file=$(find $PREFIX/lib/python3.11/_sysconfigdata*.py)
-rm -rf $PREFIX/lib/python3.11/__pycache__
-sed -i 's|-fno-openmp-implicit-rpath||g' "$_file"
+# _file=$(find $PREFIX/lib/python3.11/_sysconfigdata*.py)
+# rm -rf $PREFIX/lib/python3.11/__pycache__
+# sed -i 's|-fno-openmp-implicit-rpath||g' "$_file"
 pkg install -y python-cryptography
 LDFLAGS="-L${PREFIX}/lib/" CFLAGS="-I${PREFIX}/include/" pip install --upgrade wheel pillow
 pip install cython setuptools
-CFLAGS="-Wno-error=incompatible-function-pointer-types -O0" pip install lxml
+CFLAGS="-Wno-error=incompatible-function-pointer-types -O0" pip install --upgrade lxml
 
 
 echo "${green}━━━ Starting SDK Tools installation ━━━${nocolor}"
@@ -116,41 +116,20 @@ sh -c 'wget https://bitbucket.org/iBotPeaches/apktool/downloads/apktool_2.9.1.ja
 fi
 
 cd ~/dex2c
-python3 -m pip install -U -r requirements.txt || exit 2
+python3 -m pip install -r requirements.txt || exit 2
 
-if [ -f ".bashrc" ]; then
-  cat <<- EOL >> ~/.bashrc
-export ANDROID_HOME=$HOME/android-sdk
-export PATH=$PATH:$HOME/android-sdk/cmdline-tools/latest/bin
-export PATH=$PATH:$HOME/android-sdk/platform-tools
-export PATH=$PATH:$HOME/android-sdk/build-tools/34.0.4
-export PATH=$PATH:$HOME/android-sdk/ndk/$ndk_version
-export ANDROID_NDK_ROOT=$HOME/android-sdk/ndk/$ndk_version
-EOL
-elif [ -f ".zshrc" ]; then
-  cat <<- EOL >> ~/.zshrc
-export ANDROID_HOME=$HOME/android-sdk
-export PATH=$PATH:$HOME/android-sdk/cmdline-tools/latest/bin
-export PATH=$PATH:$HOME/android-sdk/platform-tools
-export PATH=$PATH:$HOME/android-sdk/build-tools/34.0.4
-export PATH=$PATH:$HOME/android-sdk/ndk/$ndk_version
-export ANDROID_NDK_ROOT=$HOME/android-sdk/ndk/$ndk_version
-EOL
+if [ -f "$HOME/.bashrc" ]; then
+  echo -e "export ANDROID_HOME=$HOME/android-sdk\nexport PATH=\$PATH:$HOME/android-sdk/cmdline-tools/latest/bin\nexport PATH=\$PATH:$HOME/android-sdk/platform-tools\nexport PATH=\$PATH:$HOME/android-sdk/build-tools/34.0.4\nexport PATH=\$PATH:$HOME/android-sdk/ndk/$ndk_version\nexport ANDROID_NDK_ROOT=$HOME/android-sdk/ndk/$ndk_version" >> ~/.bashrc
+elif [ -f "$HOME/.zshrc" ]; then
+  echo -e "export ANDROID_HOME=$HOME/android-sdk\nexport PATH=\$PATH:$HOME/android-sdk/cmdline-tools/latest/bin\nexport PATH=\$PATH:$HOME/android-sdk/platform-tools\nexport PATH=\$PATH:$HOME/android-sdk/build-tools/34.0.4\nexport PATH=\$PATH:$HOME/android-sdk/ndk/$ndk_version\nexport ANDROID_NDK_ROOT=$HOME/android-sdk/ndk/$ndk_version" >> ~/.zshrc
 else
-  cat <<- EOL >> $PREFIX/etc/bash.bashrc
-export ANDROID_HOME=$HOME/android-sdk
-export PATH=$PATH:$HOME/android-sdk/cmdline-tools/latest/bin
-export PATH=$PATH:$HOME/android-sdk/platform-tools
-export PATH=$PATH:$HOME/android-sdk/build-tools/34.0.4
-export PATH=$PATH:$HOME/android-sdk/ndk/$ndk_version
-export ANDROID_NDK_ROOT=$HOME/android-sdk/ndk/$ndk_version
-EOL
+  echo -e "export ANDROID_HOME=$HOME/android-sdk\nexport PATH=\$PATH:$HOME/android-sdk/cmdline-tools/latest/bin\nexport PATH=\$PATH:$HOME/android-sdk/platform-tools\nexport PATH=\$PATH:$HOME/android-sdk/build-tools/34.0.4\nexport PATH=\$PATH:$HOME/android-sdk/ndk/$ndk_version\nexport ANDROID_NDK_ROOT=$HOME/android-sdk/ndk/$ndk_version" >> $PREFIX/etc/bash.bashrc
 fi
 
 cat > $HOME/dex2c/dcc.cfg << EOL
 {
     "apktool": "tools/apktool.jar",
-    "ndk_dir": "$HOME/android-sdk/ndk/$ndk_version",
+    "ndk_dir": "$HOME/android-sdk/ndk/${ndk_version}",
     "signature": {
         "keystore_path": "keystore/debug.keystore",
         "alias": "androiddebugkey",
