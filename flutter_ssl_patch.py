@@ -4,7 +4,7 @@
 """
 usage: flutter_ssl_patch.py [-h] [--binary BINARY]
 
-Search & patch for SSL verification bypass patterns in a binary.
+Search & patch for SSL verification bypass in a binary.
 
 options:
   -h, --help       show this help message and exit
