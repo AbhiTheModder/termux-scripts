@@ -2,6 +2,8 @@
 
 Some termux scripts created for easier installation & usages of tools
 
+Additionally, you can find a selection of straightforward scripts on my [gist](https://gist.github.com/AbhiTheModder). However, with each revision, the raw URLs of gists tend to change, so the significant ones have been transferred to this repository.
+
 # Contents
 
 1. **dex2c_install_termux.sh:** Install [codehasan/dex2c](https://github.com/ratsan/dex2c) on Termux without issues/hassle
