@@ -1,6 +1,4 @@
-# termux-scripts
-
-Some termux scripts created for easier installation & usages of tools
+Some scripts (primarily focused on Termux) created for easier installation & usages of tools
 
 Additionally, you can find a selection of straightforward scripts on my [gist](https://gist.github.com/AbhiTheModder). However, with each revision, the raw URLs of gists tend to change, so the significant ones have been transferred to this repository.
 
