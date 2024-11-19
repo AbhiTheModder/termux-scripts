@@ -34,7 +34,7 @@ if [ -f "frida-core-devkit-android-arm64.tar.xz" ]; then
   rm -f frida-core-devkit-android-arm64.tar.xz
 fi
 
-git clone https://github.com/AbhiTheModder/frida-python-android
+git clone https://github.com/AbhiTheModder/frida-python frida-python-android
 
 cd frida-python-android
 
