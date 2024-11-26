@@ -24,6 +24,7 @@ Additionally, you can find a selection of straightforward scripts on my [gist](h
 5. **tgpatcher.py:** Patch script for applying patches to Telegram
 
 This repo also hosts the github workflow to automate this script and for version checking it stores old version into file named `backup_tg_version.txt`.
+6. **DexRepair.py:** A simple command-line tool for repairing DEX files. It fixes the DEX magic number and updates the checksum and signature in the DEX header. Used in my [@RevEngiBot](https://github.com/RevEngiSquad) project made public :)
 
 > [!TIP]
 > First decompile your apk using apktool or APKEditor.
