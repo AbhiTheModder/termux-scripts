@@ -55,6 +55,11 @@ jobs:
             echo "new_version_available=false" >> $GITHUB_ENV
           fi
 
+      - name: Set Telegram Version
+        if: env.new_version_available == 'true'
+        id: set_version
+        run: echo "version=$(cat tg_version.txt)" >> $GITHUB_ENV
+
       - name: Download apktool
         if: env.new_version_available == 'true'
         run: |
@@ -100,15 +105,10 @@ jobs:
       - name: Sign APks
         if: env.new_version_available == 'true'
         run: |
-          java -jar keystore/apksigner.jar sign --in Telegram_Patched_aligned.apk --out Telegram_Patched.apk --ks keystore/debug.keystore --ks-key-alias androiddebugkey --ks-pass pass:android --key-pass pass:android --v1-signing-enabled true --v2-signing-enabled true --v3-signing-enabled true --v4-signing-enabled false
+          java -jar keystore/apksigner.jar sign --in Telegram_Patched_aligned.apk --out Telegram_Patched_${{ env.version }}.apk --ks keystore/debug.keystore --ks-key-alias androiddebugkey --ks-pass pass:android --key-pass pass:android --v1-signing-enabled true --v2-signing-enabled true --v3-signing-enabled true --v4-signing-enabled false
           rm Telegram_Patched_aligned.apk
-          java -jar keystore/apksigner.jar sign --in Telegram_Anti_Patched_aligned.apk --out Telegram_Anti_Patched.apk --ks keystore/debug.keystore --ks-key-alias androiddebugkey --ks-pass pass:android --key-pass pass:android --v1-signing-enabled true --v2-signing-enabled true --v3-signing-enabled true --v4-signing-enabled false
+          java -jar keystore/apksigner.jar sign --in Telegram_Anti_Patched_aligned.apk --out Telegram_Anti_Patched_${{ env.version }}.apk --ks keystore/debug.keystore --ks-key-alias androiddebugkey --ks-pass pass:android --key-pass pass:android --v1-signing-enabled true --v2-signing-enabled true --v3-signing-enabled true --v4-signing-enabled false
           rm Telegram_Anti_Patched_aligned.apk
-
-      - name: Set Telegram Version
-        if: env.new_version_available == 'true'
-        id: set_version
-        run: echo "version=$(cat tg_version.txt)" >> $GITHUB_ENV
 
       - name: Install upload requirements
         if: env.new_version_available == 'true'
@@ -120,7 +120,7 @@ jobs:
           export BOT_TOKEN=${{ secrets.BOT_TOKEN }}
           export API_ID=${{ secrets.API_ID }}
           export API_HASH=${{ secrets.API_HASH }}
-          python3 tgupload.py Telegram_Patched.apk --chat-id ${{ secrets.CHAT_ID }} --caption "$(cat <<EOF
+          python3 tgupload.py Telegram_Patched_${{ env.version }}.apk --chat-id ${{ secrets.CHAT_ID }} --caption "$(cat <<EOF
           **Telegram [ Premium ] [ Local+ ] [ Direct ] [ Normal ]**
           **Version :** ${{ env.version }}
           **Architecture :** Arm + Arm64
@@ -150,7 +150,7 @@ jobs:
           export BOT_TOKEN=${{ secrets.BOT_TOKEN }}
           export API_ID=${{ secrets.API_ID }}
           export API_HASH=${{ secrets.API_HASH }}
-          python3 tgupload.py Telegram_Anti_Patched.apk --chat-id ${{ secrets.CHAT_ID }} --caption "$(cat <<EOF
+          python3 tgupload.py Telegram_Anti_Patched_${{ env.version }}.apk --chat-id ${{ secrets.CHAT_ID }} --caption "$(cat <<EOF
           **Telegram [ Premium ] [ Local+ ] [ Direct ] [ Anti ]**
           **Version :** ${{ env.version }}
           **Architecture :** Arm + Arm64
