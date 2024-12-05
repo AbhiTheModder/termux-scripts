@@ -72,12 +72,13 @@ def repair_dex_magic(dex_data: bytearray):
     return dex_data
 
 
-def update_dex_hashes(dex_data: bytearray):
+def update_dex_hashes(dex_data: bytearray, repair_sha1: bool = False):
     """
     This function updates the checksum and signature in the DEX header of a given bytearray containing dex data.
 
     Parameters:
     dex_data (bytearray): The bytearray containing the dex data.
+    repair_sha1 (bool): If True, the SHA-1 signature is updated. If False, the SHA-1 signature is not updated.
 
     Returns:
     bytearray: The bytearray containing the updated dex data.
@@ -88,18 +89,21 @@ def update_dex_hashes(dex_data: bytearray):
     The updated checksum is then packed into a 4-byte little-endian integer and written back into the dex data, starting from the 9th byte.
     The updated signature is then written back into the dex data, starting from the 13th byte.
     """
-    checksum = zlib.adler32(dex_data[12:])
-    signature = hashlib.sha1(dex_data[32:]).digest()
-    print(f"Checksum: {checksum:#x}")
-    print(f"Signature: {signature.hex()}")
+    if repair_sha1:
+        signature = hashlib.sha1(dex_data[32:]).digest()
+        print(f"Signature: {signature.hex()}")
+        dex_data[12:32] = signature
 
+    checksum = zlib.adler32(dex_data[12:])
+    print(f"Checksum: {checksum:#x}")
     dex_data[8:12] = struct.pack("<I", checksum)
-    dex_data[12:32] = signature
+
     return dex_data
 
 
 def repair_dex(
     dex_path: str,
+    repair_sha1: bool = False,
     output_dex_path: str = None,
 ):
     """
@@ -107,6 +111,7 @@ def repair_dex(
 
     Parameters:
     dex_path (str): The path to the dex file or directory containing dex files.
+    repair_sha1 (bool, optional): If True, the SHA-1 signature is updated. If False, the SHA-1 signature is not updated. Default is False.
     output_dex_path (str, optional): The output path for the repaired dex files. If not provided, the repaired dex files will be overwritten in the original location.
 
     Returns:
@@ -125,19 +130,22 @@ def repair_dex(
                 if not os.path.isdir(output_dex_path):
                     raise DexRepairError(f"{output_dex_path} not a directory!")
                 print(f"Repairing {file_path}...")
-                repair_dex_file(file_path, output_file_path)
+                repair_dex_file(file_path, output_file_path, repair_sha1)
     elif os.path.isfile(dex_path):
         repair_dex_file(dex_path, output_dex_path)
     else:
         raise DexRepairError(f"Path not found: {dex_path}")
 
 
-def repair_dex_file(dex_file_path: str, output_dex_path: str = None):
+def repair_dex_file(
+    dex_file_path: str, repair_sha1: bool = False, output_dex_path: str = None
+):
     """
     This function repairs a single dex file by fixing the DEX magic number and updating the checksum and signature in the DEX header. The repaired dex file is then written to the output path if it is provided, or to the original path if it is not.
 
     Parameters:
     dex_file_path (str): The path to the dex file to be repaired.
+    repair_sha1 (bool, optional): If True, the SHA-1 signature is updated. If False, the SHA-1 signature is not updated. Default is False.
     output_dex_path (str, optional): The output path for the repaired dex file. If not provided, the repaired dex file will be overwritten in the original location.
 
     Returns:
@@ -153,7 +161,7 @@ def repair_dex_file(dex_file_path: str, output_dex_path: str = None):
         raise DexRepairError(f"DEX file not found: {dex_file_path}")
 
     dex_data = repair_dex_magic(dex_data)
-    dex_data = update_dex_hashes(dex_data)
+    dex_data = update_dex_hashes(dex_data, repair_sha1)
 
     if output_dex_path:
         with open(output_dex_path, "wb") as f:
@@ -168,6 +176,9 @@ def main():
     parser = argparse.ArgumentParser(description="DEX Repair Tool", epilog=epilog)
     parser.add_argument("dex_file", help="Path to the DEX file")
     parser.add_argument("-o", "--output", help="Path to the output DEX file (optional)")
+    parser.add_argument(
+        "-s", "--sha", action="store_true", help="Repair SHA1 hash (optional)"
+    )
 
     args = parser.parse_args()
 
@@ -177,7 +188,7 @@ def main():
         output = args.dex_file.replace(".dex", "_repaired.dex")
 
     try:
-        repair_dex(args.dex_file, output)
+        repair_dex(args.dex_file, output, args.sha)
         print("DEX repair completed successfully.")
 
     except DexRepairError as e:
