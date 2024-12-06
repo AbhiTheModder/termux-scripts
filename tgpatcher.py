@@ -18,6 +18,12 @@ BLUE = "\033[0;34m"
 NC = "\033[0m"  # No Color
 
 
+class NoMethodFoundError(Exception):
+    """Exception raised when the method is not found in the file."""
+
+    pass
+
+
 def find_smali_file(root_directory, target_file):
     """Recursively search for the target file within the root directory."""
     for dirpath, _, filenames in os.walk(root_directory):
@@ -67,7 +73,9 @@ def modify_method(file_path, method_name, new_method_code):
             file.writelines(new_lines)
         print(f"{GREEN}INFO: {NC}Method {method_name} modified successfully.")
     else:
-        print(f"{YELLOW}WARN: {NC}Method {method_name} not found in the file.")
+        raise NoMethodFoundError(
+            f"{YELLOW}WARN: {NC}Method {method_name} not found in the file."
+        )
 
 
 def apply_regex(root_directory, search_pattern, replace_pattern, file_path=None):
@@ -209,7 +217,10 @@ def modify_isPremium(file_path):
         "    return v0\n",
         ".end method\n",
     ]
-    modify_method(file_path, "public isPremium()Z", new_method_code)
+    try:
+        modify_method(file_path, "public isPremium()Z", new_method_code)
+    except NoMethodFoundError as e:
+        print(e)
 
 
 def modify_markMessagesAsDeleted(file_path):
@@ -228,16 +239,22 @@ def modify_markMessagesAsDeleted(file_path):
         "    return-object v1\n",
         ".end method\n",
     ]
-    modify_method(
-        file_path,
-        "public markMessagesAsDeleted(JIZZ)Ljava/util/ArrayList;",
-        new_method_code,
-    )
-    modify_method(
-        file_path,
-        "public markMessagesAsDeleted(JLjava/util/ArrayList;ZZII)Ljava/util/ArrayList;",
-        new_method_code2,
-    )
+    try:
+        modify_method(
+            file_path,
+            "public markMessagesAsDeleted(JIZZ)Ljava/util/ArrayList;",
+            new_method_code,
+        )
+    except NoMethodFoundError as e:
+        print(e)
+    try:
+        modify_method(
+            file_path,
+            "public markMessagesAsDeleted(JLjava/util/ArrayList;ZZII)Ljava/util/ArrayList;",
+            new_method_code2,
+        )
+    except NoMethodFoundError as e:
+        print(e)
 
 
 def modify_isPremium_stories(file_path):
@@ -252,7 +269,21 @@ def modify_isPremium_stories(file_path):
         "    return p1\n",
         ".end method\n",
     ]
-    modify_method(file_path, "private isPremium(J)Z", new_method_code)
+    try:
+        modify_method(file_path, "private isPremium(J)Z", new_method_code)
+    except NoMethodFoundError:
+        # Maybe plus messenger ? let's look for 2nd method
+        new_method_code = [
+            ".method public final isPremium(J)Z\n",
+            "    .locals 1\n",
+            "    const/4 p1, 0x1\n",
+            "    return p1\n",
+            ".end method\n",
+        ]
+        try:
+            modify_method(file_path, "public final isPremium(J)Z", new_method_code)
+        except NoMethodFoundError:
+            print(f"{YELLOW}No isPremium(J)Z method found in StoriesController!{NC}")
 
 
 def modify_getCertificateSHA256Fingerprint(file_path):
@@ -269,11 +300,14 @@ def modify_getCertificateSHA256Fingerprint(file_path):
         "    return-object v0\n",
         ".end method\n",
     ]
-    modify_method(
-        file_path,
-        "public static getCertificateSHA256Fingerprint()Ljava/lang/String;",
-        new_method_code,
-    )
+    try:
+        modify_method(
+            file_path,
+            "public static getCertificateSHA256Fingerprint()Ljava/lang/String;",
+            new_method_code,
+        )
+    except NoMethodFoundError as e:
+        print(e)
 
 
 def modify_forcePremium(file_path):
@@ -287,11 +321,14 @@ def modify_forcePremium(file_path):
         "    return p0\n",
         ".end method\n",
     ]
-    modify_method(
-        file_path,
-        "static synthetic access$3000(Lorg/telegram/ui/PremiumPreviewFragment;)Z",
-        new_method_code,
-    )
+    try:
+        modify_method(
+            file_path,
+            "static synthetic access$3000(Lorg/telegram/ui/PremiumPreviewFragment;)Z",
+            new_method_code,
+        )
+    except NoMethodFoundError as e:
+        print(e)
 
 
 def modify_markStories_method(file_path):
@@ -312,16 +349,22 @@ def modify_markStories_method(file_path):
         "    return p1\n",
         ".end method\n",
     ]
-    modify_method(
-        file_path,
-        "public markStoryAsRead(Lorg/telegram/tgnet/tl/TL_stories$PeerStories;Lorg/telegram/tgnet/tl/TL_stories$StoryItem;Z)Z",
-        new_method_code1,
-    )
-    modify_method(
-        file_path,
-        "public markStoryAsRead(JLorg/telegram/tgnet/tl/TL_stories$StoryItem;)Z",
-        new_method_code2,
-    )
+    try:
+        modify_method(
+            file_path,
+            "public markStoryAsRead(Lorg/telegram/tgnet/tl/TL_stories$PeerStories;Lorg/telegram/tgnet/tl/TL_stories$StoryItem;Z)Z",
+            new_method_code1,
+        )
+    except NoMethodFoundError as e:
+        print(e)
+    try:
+        modify_method(
+            file_path,
+            "public markStoryAsRead(JLorg/telegram/tgnet/tl/TL_stories$StoryItem;)Z",
+            new_method_code2,
+        )
+    except NoMethodFoundError as e:
+        print(e)
 
 
 def modify_isPremiumFeatureAvailable_method(file_path, method_name):
@@ -570,12 +613,18 @@ def modify_isChatNoForwards(file_path):
         "    return p1\n",
         ".end method\n",
     ]
-    modify_method(file_path, "public isChatNoForwards(J)Z", new_method_code1)
-    modify_method(
-        file_path,
-        "public isChatNoForwards(Lorg/telegram/tgnet/TLRPC$Chat;)Z",
-        new_method_code2,
-    )
+    try:
+        modify_method(file_path, "public isChatNoForwards(J)Z", new_method_code1)
+    except NoMethodFoundError as e:
+        print(e)
+    try:
+        modify_method(
+            file_path,
+            "public isChatNoForwards(Lorg/telegram/tgnet/TLRPC$Chat;)Z",
+            new_method_code2,
+        )
+    except NoMethodFoundError as e:
+        print(e)
 
 
 def modify_checkCanOpenChat(file_path):
@@ -601,21 +650,30 @@ def modify_checkCanOpenChat(file_path):
         "    return p1\n",
         ".end method\n",
     ]
-    modify_method(
-        file_path,
-        "public checkCanOpenChat(Landroid/os/Bundle;Lorg/telegram/ui/ActionBar/BaseFragment;)Z",
-        new_method_code1,
-    )
-    modify_method(
-        file_path,
-        "public checkCanOpenChat(Landroid/os/Bundle;Lorg/telegram/ui/ActionBar/BaseFragment;Lorg/telegram/messenger/MessageObject;)Z",
-        new_method_code2,
-    )
-    modify_method(
-        file_path,
-        "public checkCanOpenChat(Landroid/os/Bundle;Lorg/telegram/ui/ActionBar/BaseFragment;Lorg/telegram/messenger/MessageObject;Lorg/telegram/messenger/browser/Browser$Progress;)Z",
-        new_method_code3,
-    )
+    try:
+        modify_method(
+            file_path,
+            "public checkCanOpenChat(Landroid/os/Bundle;Lorg/telegram/ui/ActionBar/BaseFragment;)Z",
+            new_method_code1,
+        )
+    except NoMethodFoundError as e:
+        print(e)
+    try:
+        modify_method(
+            file_path,
+            "public checkCanOpenChat(Landroid/os/Bundle;Lorg/telegram/ui/ActionBar/BaseFragment;Lorg/telegram/messenger/MessageObject;)Z",
+            new_method_code2,
+        )
+    except NoMethodFoundError as e:
+        print(e)
+    try:
+        modify_method(
+            file_path,
+            "public checkCanOpenChat(Landroid/os/Bundle;Lorg/telegram/ui/ActionBar/BaseFragment;Lorg/telegram/messenger/MessageObject;Lorg/telegram/messenger/browser/Browser$Progress;)Z",
+            new_method_code3,
+        )
+    except NoMethodFoundError as e:
+        print(e)
 
 
 def modify_is_sponsored_method(file_path):
@@ -627,7 +685,10 @@ def modify_is_sponsored_method(file_path):
         "    return v0\n",
         ".end method\n",
     ]
-    modify_method(file_path, "public isSponsored()Z", new_method_code)
+    try:
+        modify_method(file_path, "public isSponsored()Z", new_method_code)
+    except NoMethodFoundError as e:
+        print(e)
 
 
 def modify_is_proxy_sponsored_method(file_path):
@@ -638,7 +699,10 @@ def modify_is_proxy_sponsored_method(file_path):
         "return-void\n",
         ".end method\n",
     ]
-    modify_method(file_path, "private checkPromoInfoInternal(Z)V", new_method_code)
+    try:
+        modify_method(file_path, "private checkPromoInfoInternal(Z)V", new_method_code)
+    except NoMethodFoundError as e:
+        print(e)
 
 
 def automate_modification(root_directory, target_file, modification_function):
@@ -677,7 +741,7 @@ def main(selected_patch=None, root_directory=None):
 
     if root_directory == "Telegram":
         root_directory = (
-            input("Give me the decompiled directory path (Default is 'Telegram'):")
+            input("Give me the decompiled directory path (Default is 'Telegram'): ")
             or root_directory
         )
 
@@ -727,6 +791,11 @@ def main(selected_patch=None, root_directory=None):
             lambda: automate_method_modification(
                 root_directory,
                 "private isPremiumFeatureAvailable(I)Z",
+                modify_isPremiumFeatureAvailable_method,
+            )
+            or automate_method_modification(
+                root_directory,
+                "public final isPremiumFeatureAvailable(I)Z",
                 modify_isPremiumFeatureAvailable_method,
             ),
         ),
@@ -837,7 +906,9 @@ if __name__ == "__main__":
         required=False,
         action=argparse.BooleanOptionalAction,
     )
-    parser.add_argument("--dir", help="Specify the directory", required=False, default="Telegram")
+    parser.add_argument(
+        "--dir", help="Specify the directory", required=False, default="Telegram"
+    )
 
     args = parser.parse_args()
 
