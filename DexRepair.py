@@ -130,9 +130,9 @@ def repair_dex(
                 if not os.path.isdir(output_dex_path):
                     raise DexRepairError(f"{output_dex_path} not a directory!")
                 print(f"Repairing {file_path}...")
-                repair_dex_file(file_path, output_file_path, repair_sha1)
+                repair_dex_file(file_path, repair_sha1, output_file_path)
     elif os.path.isfile(dex_path):
-        repair_dex_file(dex_path, output_dex_path)
+        repair_dex_file(dex_path, repair_sha1, output_dex_path)
     else:
         raise DexRepairError(f"Path not found: {dex_path}")
 
@@ -188,7 +188,7 @@ def main():
         output = args.dex_file.replace(".dex", "_repaired.dex")
 
     try:
-        repair_dex(args.dex_file, output, args.sha)
+        repair_dex(args.dex_file, args.sha, output)
         print("DEX repair completed successfully.")
 
     except DexRepairError as e:
