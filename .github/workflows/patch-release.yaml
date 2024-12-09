@@ -1,8 +1,9 @@
 name: Telegram APK Auto-Patcher
 
 on:
-  schedule:
-    - cron: '0 */12 * * *'
+  repository_dispatch:
+    types:
+      - tg-updated
   workflow_dispatch:
 
 jobs:
