@@ -17,6 +17,84 @@ YELLOW = "\033[1;33m"
 BLUE = "\033[0;34m"
 NC = "\033[0m"  # No Color
 
+HOOK_SMALI = """
+.class public Lorg/telegram/abhi/Hook;
+.super Ljava/lang/Object;
+.source "SourceFile"
+
+
+# static fields
+.field public static candelMessages:Z
+
+
+# direct methods
+.method public constructor <init>()V
+    .registers 1
+
+    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
+
+    return-void
+.end method
+
+.method public static hook()V
+    .registers 1
+
+    const/4 v0, 0x1
+
+    .line 17
+    invoke-static {v0}, Lorg/telegram/abhi/Hook;->setCanDelMessages(Z)V
+
+    return-void
+.end method
+
+.method public static setCanDelMessages(Z)V
+    .registers 4
+
+    sput-boolean p0, Lorg/telegram/abhi/Hook;->candelMessages:Z
+
+    sget-object v0, Lorg/telegram/messenger/ApplicationLoader;->applicationContext:Landroid/content/Context;
+
+    const-string v1, "mainconfig"
+
+    const/4 v2, 0x0
+
+    invoke-virtual {v0, v1, v2}, Landroid/content/Context;->getSharedPreferences(Ljava/lang/String;I)Landroid/content/SharedPreferences;
+
+    move-result-object v0
+
+    invoke-interface {v0}, Landroid/content/SharedPreferences;->edit()Landroid/content/SharedPreferences$Editor;
+
+    move-result-object v0
+
+    const-string v1, "candelMessages"
+
+    invoke-interface {v0, v1, p0}, Landroid/content/SharedPreferences$Editor;->putBoolean(Ljava/lang/String;Z)Landroid/content/SharedPreferences$Editor;
+
+    move-result-object v0
+
+    invoke-interface {v0}, Landroid/content/SharedPreferences$Editor;->apply()V
+
+    return-void
+.end method
+
+.method public static unhook()V
+    .registers 1
+
+    .line 23
+    sget-boolean v0, Lorg/telegram/abhi/Hook;->candelMessages:Z
+
+    if-eqz v0, :cond_8
+
+    const/4 v0, 0x0
+
+    .line 24
+    invoke-static {v0}, Lorg/telegram/abhi/Hook;->setCanDelMessages(Z)V
+
+    :cond_8
+    return-void
+.end method
+"""
+
 
 class NoMethodFoundError(Exception):
     """Exception raised when the method is not found in the file."""
@@ -76,6 +154,87 @@ def modify_method(file_path, method_name, new_method_code):
         raise NoMethodFoundError(
             f"{YELLOW}WARN: {NC}Method {method_name} not found in the file."
         )
+
+
+def modify_del_method(file_path, method_name, new_method_code):
+    """Modify the method in the smali file."""
+    with open(file_path, "r") as file:
+        lines = file.readlines()
+
+    in_method = False
+    in_annotation = False
+    method_found = False
+    annotation_end_index = -1
+    new_lines = []
+
+    for i, line in enumerate(lines):
+        if f".method {method_name}" in line:
+            in_method = True
+            method_found = True
+            new_lines.append(line)
+            continue
+
+        if in_method:
+            if ".annotation" in line:
+                in_annotation = True
+            elif in_annotation and ".end annotation" in line:
+                in_annotation = False
+                annotation_end_index = i
+
+            if (
+                not in_annotation
+                and annotation_end_index != -1
+                and i > annotation_end_index
+            ):
+                new_lines.extend(new_method_code)
+                annotation_end_index = -1
+
+            new_lines.append(line)
+
+            if ".end method" in line:
+                in_method = False
+        else:
+            new_lines.append(line)
+
+    if method_found:
+        with open(file_path, "w") as file:
+            file.writelines(new_lines)
+        print(f"{GREEN}INFO: {NC}Method {method_name} modified successfully.")
+    else:
+        raise NoMethodFoundError(
+            f"{YELLOW}WARN: {NC}Method {method_name} not found in the file."
+        )
+
+
+def copy_method(file_path, original_method_name, new_method_name):
+    """Copy the method in the smali file."""
+    with open(file_path, "r") as file:
+        lines = file.readlines()
+
+    in_method = False
+    method_found = False
+    method_lines = []
+
+    for line in lines:
+        if f".method {original_method_name}" in line:
+            in_method = True
+            method_found = True
+            method_lines.append(line.replace(original_method_name, new_method_name))
+            continue
+
+        if in_method:
+            method_lines.append(line)
+            if ".end method" in line:
+                in_method = False
+
+    if method_found:
+        with open(file_path, "a") as file:
+            file.writelines(method_lines)
+        print(
+            f"{GREEN}INFO: {NC}Method {original_method_name} copied to {new_method_name} successfully."
+        )
+    else:
+        print(f"{YELLOW}WARN: {NC}Method {original_method_name} not found in the file.")
 
 
 def apply_regex(root_directory, search_pattern, replace_pattern, file_path=None):
@@ -224,37 +383,192 @@ def modify_isPremium(file_path):
 
 
 def modify_markMessagesAsDeleted(file_path):
-    """Modify markMessagesAsDeleted methods to return false."""
-    new_method_code = [
-        ".method public markMessagesAsDeleted(JIZZ)Ljava/util/ArrayList;\n",
-        "    .locals 6\n",
+    """Modify markMessagesAsDeleted methods"""
+    smali_dir = os.path.dirname(file_path).split("/")[0:2]
+    root_dir = os.path.dirname(file_path).split("/")[0]
+    smali_dir = "/".join(smali_dir)
+    new_dir = os.path.join(smali_dir, "org", "telegram", "abhi")
+    if not os.path.exists(new_dir):
+        os.makedirs(new_dir, exist_ok=True)
+    hook_file = os.path.join(new_dir, "Hook.smali")
+    with open(hook_file, "w") as file:
+        file.write(HOOK_SMALI)
+
+    search_pattern = r"sget\s([v|p]\d),\sLorg/telegram/messenger/R\$string;->ShowAds:I\n+\s+(invoke-static\s{\1},\sLorg/telegram/messenger/LocaleController;->getString\(I\)Ljava/lang/String;\n+\s+move-result-object\s\1|goto\s:goto_\d+)((\n.*)*?)invoke-virtual\s({.*}),\sLorg/telegram/ui/Cells/TextCell;->setTextAndCheck\(Ljava/lang/CharSequence;ZZ\)V"
+
+    search_pattern2 = r"sget\s([v|p]\d),\sLorg/telegram/messenger/R\$string;->ShowAdsInfo:I\n+\s+(invoke-static\s{\1},\sLorg/telegram/messenger/LocaleController;->getString\(I\)Ljava/lang/String;\n+\s+move-result-object\s\1|goto\s:goto_\d+)"
+
+    search_pattern3 = r"sget\s([v|p]\d),\sLorg/telegram/messenger/R\$string;->ShowAdsTitle:I\n+\s+(invoke-static\s{\1},\sLorg/telegram/messenger/LocaleController;->getString\(I\)Ljava/lang/String;\n+\s+move-result-object\s\1|goto\s:goto_\d+)"
+
+    replace_pattern = r'const-string \1, "Do Not Delete Messages"\n\3\4\n    invoke-virtual \5, Lorg/telegram/ui/Cells/TextCell;->setTextAndCheck2(Ljava/lang/CharSequence;ZZ)V'
+    replace_pattern2 = r'const-string \1, "After enabling or disabling the feature, ensure you revisit this page for the changes to take effect.\\nMod by Abhi"'
+    replace_pattern3 = r'const-string \1, "Anti-Delete Messages"\n    invoke-virtual {v1, \1}, Lorg/telegram/ui/Cells/HeaderCell;->setText(Ljava/lang/CharSequence;)V\n    return-void'
+
+    search_patterns = [search_pattern, search_pattern2, search_pattern3]
+    replace_patterns = [replace_pattern, replace_pattern2, replace_pattern3]
+
+    for i, s_p in enumerate(search_patterns):
+        apply_regex(root_dir, s_p, replace_patterns[i])
+
+    automate_modification(root_dir, "TextCell.smali", create_delcopy_method)
+
+    automate_modification(root_dir, "LaunchActivity.smali", modify_del_oncreate_method)
+
+    new_code_to_append = [
+        "    sget-boolean v0, Lorg/telegram/abhi/Hook;->candelMessages:Z\n",
+        "    if-eqz v0, :cond_7\n",
         "    const/4 p1, 0x0\n",
         "    return-object p1\n",
-        ".end method\n",
+        "    :cond_7\n",
     ]
-    new_method_code2 = [
-        ".method public markMessagesAsDeleted(JLjava/util/ArrayList;ZZII)Ljava/util/ArrayList;\n",
-        "    .locals 8\n",
+    new_code_to_append2 = [
+        "    sget-boolean v0, Lorg/telegram/abhi/Hook;->candelMessages:Z\n",
+        "    if-eqz v0, :cond_7\n",
         "    const/4 v1, 0x0\n",
         "    return-object v1\n",
-        ".end method\n",
+        "    :cond_7\n",
     ]
+
     try:
-        modify_method(
+        modify_del_method(
             file_path,
             "public markMessagesAsDeleted(JIZZ)Ljava/util/ArrayList;",
-            new_method_code,
+            new_code_to_append,
         )
     except NoMethodFoundError as e:
         print(e)
+
     try:
-        modify_method(
+        modify_del_method(
             file_path,
             "public markMessagesAsDeleted(JLjava/util/ArrayList;ZZII)Ljava/util/ArrayList;",
-            new_method_code2,
+            new_code_to_append2,
         )
     except NoMethodFoundError as e:
         print(e)
+
+
+def modify_del_oncreate_method(file_path):
+    method_name = "protected onCreate(Landroid/os/Bundle;)V"
+    method_name2 = "public onCreate(Landroid/os/Bundle;)V"  # For plus
+    with open(file_path, "r") as file:
+        lines = file.readlines()
+
+    new_lines = []
+    in_method = False
+    method_found = False
+    cond_label_pattern = re.compile(r":cond_\d")
+    new_codes = [
+        "    sget-object v0, Lorg/telegram/messenger/ApplicationLoader;->applicationContext:Landroid/content/Context;\n",
+        '    const-string v1, "mainconfig"\n',
+        "    const/4 v2, 0x0\n",
+        "    invoke-virtual {v0, v1, v2}, Landroid/content/Context;->getSharedPreferences(Ljava/lang/String;I)Landroid/content/SharedPreferences;\n",
+        "    move-result-object v0\n",
+        '    const-string v1, "candelMessages"\n',
+        "    const/4 v2, 0x0\n",
+        "    invoke-interface {v0, v1, v2}, Landroid/content/SharedPreferences;->getBoolean(Ljava/lang/String;Z)Z\n",
+        "    move-result v0\n",
+        "    sput-boolean v0, Lorg/telegram/abhi/Hook;->candelMessages:Z\n",
+    ]
+
+    for line in lines:
+        if f".method {method_name}" or f".method {method_name2}" in line:
+            in_method = True
+            method_found = True
+            new_lines.append(line)
+            continue
+
+        if in_method:
+            if cond_label_pattern.search(line):
+                new_lines.append(line)
+                continue
+
+            if ".locals" in line:
+                new_lines.append(line)
+                new_lines.extend(new_codes)
+            else:
+                new_lines.append(line)
+
+            if ".end method" in line:
+                in_method = False
+
+            continue
+
+        new_lines.append(line)
+
+    if method_found:
+        with open(file_path, "w") as file:
+            file.writelines(new_lines)
+        print(f"{GREEN}INFO: {NC}Method {method_name} modified successfully.")
+    else:
+        print(f"{YELLOW}WARN: {NC}Method {method_name} not found in the file.")
+        sys.exit(1)
+
+
+def create_delcopy_method(file_path):
+    method_name = "public setTextAndCheck2(Ljava/lang/CharSequence;ZZ)V"
+    copy_method(
+        file_path,
+        "public setTextAndCheck(Ljava/lang/CharSequence;ZZ)V",
+        method_name,
+    )
+    with open(file_path, "r") as file:
+        lines = file.readlines()
+
+    new_lines = []
+    in_method = False
+    method_found = False
+    cond_label_pattern = re.compile(r":cond_\d")
+    new_codes = [
+        "    invoke-virtual {p0}, Landroid/view/View;->getContext()Landroid/content/Context;\n",
+        "    move-result-object v1\n",
+        '    const-string v0, "Turned off"\n',
+        "    if-eqz p2, :cond_48\n",
+        '    const-string v0, "Turned on"\n',
+        "    :cond_48\n",
+        "    invoke-static {v1, v0, v2}, Landroid/widget/Toast;->makeText(Landroid/content/Context;Ljava/lang/CharSequence;I)Landroid/widget/Toast;\n",
+        "    move-result-object v0\n",
+        "    invoke-virtual {v0}, Landroid/widget/Toast;->show()V\n",
+        "    if-eqz p2, :cond_55\n",
+        "    invoke-static {}, Lorg/telegram/abhi/Hook;->hook()V\n",
+        "    goto :goto_58\n",
+        "    :cond_55\n",
+        "    invoke-static {}, Lorg/telegram/abhi/Hook;->unhook()V\n",
+        "    :goto_58\n",
+        "    return-void\n",
+    ]
+
+    for line in lines:
+        if f".method {method_name}" in line:
+            in_method = True
+            method_found = True
+            new_lines.append(line)
+            continue
+
+        if in_method:
+            if cond_label_pattern.search(line):
+                new_lines.append(line)
+                continue
+
+            if "return-void" in line:
+                new_lines.extend(new_codes)
+            else:
+                new_lines.append(line)
+
+            if ".end method" in line:
+                in_method = False
+
+            continue
+
+        new_lines.append(line)
+
+    if method_found:
+        with open(file_path, "w") as file:
+            file.writelines(new_lines)
+        print(f"{GREEN}INFO: {NC}Method {method_name} modified successfully.")
+    else:
+        print(f"{YELLOW}WARN: {NC}Method {method_name} not found in the file.")
+        sys.exit(1)
 
 
 def modify_isPremium_stories(file_path):
