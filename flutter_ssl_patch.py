@@ -2,13 +2,17 @@
 # @auhtor: AbhiTheModder
 
 """
-usage: flutter_ssl_patch.py [-h] [--binary BINARY]
+usage: flutter_ssl_patch.py [-h] [-b BINARY] [-a {arm,arm64,x86}] [-p]
 
-Search & patch for SSL verification bypass in a binary.
+Search & patch for SSL verification bypass in flutter binary.
 
 options:
-  -h, --help       show this help message and exit
-  --binary BINARY  Path to the binary file
+  -h, --help            show this help message and exit
+  -b BINARY, --binary BINARY
+                        Path to the binary file
+  -a {arm,arm64,x86}, --arch {arm,arm64,x86}
+                        Binary arch
+  -p, --print           Do Not Patch, Just Print Details
 
 Example(s):
 1. Outside r2-shell:
@@ -102,27 +106,28 @@ def get_r2_version():
         return None
 
 
-def find_offset(r2, patterns, is_iA=False):
+def find_offset(r2, patterns, is_iA=False, arch=None):
     """
     Searches for patterns in the binary using radare2
     :param r2: r2pipe instance
     :param patterns: dictionary of patterns
     """
-    if is_iA:
-        arch = json.loads(r2.cmd("iAj"))
-    else:
-        arch = json.loads(r2.cmd("iaj"))
-    arch_value = arch["bins"][0]["arch"]
-    arch_bits = arch["bins"][0]["bits"]
-    if arch_value == "arm" and arch_bits == 64:
-        arch = "arm64"
-    elif arch_value == "arm" and arch_bits == 16:
-        arch = "arm"
-    elif arch_value == "x86" and arch_bits == 64:
-        arch = "x86"
-    else:
-        print(f"{RED}Unsupported architecture: {arch_value}{NC}")
-        return
+    if not arch:
+        if is_iA:
+            arch = json.loads(r2.cmd("iAj"))
+        else:
+            arch = json.loads(r2.cmd("iaj"))
+        arch_value = arch["bins"][0]["arch"]
+        arch_bits = arch["bins"][0]["bits"]
+        if arch_value == "arm" and arch_bits == 64:
+            arch = "arm64"
+        elif arch_value == "arm" and arch_bits == 16:
+            arch = "arm"
+        elif arch_value == "x86" and arch_bits == 64:
+            arch = "x86"
+        else:
+            print(f"{RED}Unsupported architecture: {arch_value}{NC}")
+            return
 
     if arch in patterns:
         for arch in patterns:
@@ -140,21 +145,26 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Search & patch for SSL verification bypass in flutter binary."
     )
-    parser.add_argument("--binary", help="Path to the binary file", required=False)
+    parser.add_argument("-b", "--binary", help="Path to the binary file", required=False)
+    parser.add_argument("-a", "--arch", help="Binary arch",
+                        choices=['arm', 'arm64', 'x86'], default=None, required=False)
+    parser.add_argument("-p", "--print", help="Do Not Patch, Just Print Details",
+                        action="store_true", required=False)
     args = parser.parse_args()
 
-    try:
-        r2_version = tuple(map(int, get_r2_version().split(".")))
-        ia_version = tuple(
-            map(int, "5.9.5".split("."))
-        )  # Because r2 depreciated `ia` 5.9.6 onwards
-        if r2_version <= ia_version:
-            is_iA = True
-        else:
-            is_iA = False
-    except Exception as e:
-        print(f"{RED}Error: {str(e)}{NC}")
-        sys.exit(1)
+    if not args.arch:
+        try:
+            r2_version = tuple(map(int, get_r2_version().split(".")))
+            ia_version = tuple(
+                map(int, "5.9.5".split("."))
+            )  # Because r2 depreciated `ia` 5.9.6 onwards
+            if r2_version <= ia_version:
+                is_iA = True
+            else:
+                is_iA = False
+        except Exception as e:
+            print(f"{RED}Error: {str(e)}{NC}")
+            sys.exit(1)
 
     if r2pipe.in_r2():
         r2 = r2pipe.open()
@@ -168,11 +178,15 @@ if __name__ == "__main__":
     print(f"{YELLOW}Analyzing function calls...{NC}")
     r2.cmd("aac")
     print(f"{YELLOW}Searching for offset...{NC}")
-    offset = find_offset(r2, patterns, is_iA)
+    if args.arch:
+        offset = find_offset(r2, patterns, arch=args.arch)
+    else:
+        offset = find_offset(r2, patterns, is_iA)
     if offset:
-        r2.cmd(f"{offset}")
-        r2.cmd("wao ret0")
-        print(f"{GREEN}ssl_verify_peer_cert patched successfully!{NC}")
+        if not args.print:
+            r2.cmd(f"{offset}")
+            r2.cmd("wao ret0")
+            print(f"{GREEN}ssl_verify_peer_cert patched successfully!{NC}")
     else:
         print(f"{RED}ssl_verify_peer_cert not found.{NC}")
     r2.quit()
