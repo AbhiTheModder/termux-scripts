@@ -137,6 +137,9 @@ def find_offset(r2, patterns, is_iA=False, arch=None):
                 if search_result:
                     search_fcn = r2.cmd(f"{search_result};afl.").strip().split(" ")[0]
                     print(f"ssl_verify_peer_cert found at: {BLUE}{search_result}{NC}")
+                    if not search_fcn and arch == "x86":
+                        search_fcn = search_result
+                        r2.cmd(f"af @{search_fcn}")
                     print(f"function at: {YELLOW}{search_fcn}{NC}")
                     return search_fcn
 
