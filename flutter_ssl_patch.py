@@ -82,7 +82,7 @@ patterns = {
         "55 41 57 41 56 41 55 41 54 53 50 49 89 fe 48 8b 1f 48 8b 43 30 4c 8b b8 d0 01 00 00 4d 85 ff 74 12 4d 8b a7 90 00 00 00 4d 85 e4 74 4a 49 8b 04 24 eb 46",
         "55 41 57 41 56 41 55 41 54 53 50 49 89 f. 4c 8b 37 49 8b 46 30 4c 8b a. .. 0. 00 00 4d 85 e. 74 1. 4d 8b",
         "55 41 57 41 56 41 55 41 54 53 48 83 EC 18 49 89 FF 48 8B 1F 48 8B 43 30 4C 8B A0 28 02 00 00 4D 85 E4 74",
-        "55 41 57 41 56 41 55 41 54 53 48 83 EC 38 C6 02 50 48 8B AF A. 00 00 00 48 85 ED 74 7. 48 83 7D 00 00 74",
+        "55 41 57 41 56 41 55 41 54 53 48 83 EC 38 C6 02 50 48 8B AF A. 00 00 00 48 85 ED 74 7. 48 83 7D 00 00 74",  # This pattern finds `session_verify_cert_chain` instead
     ],
 }
 
@@ -149,11 +149,24 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Search & patch for SSL verification bypass in flutter binary."
     )
-    parser.add_argument("-b", "--binary", help="Path to the binary file", required=False)
-    parser.add_argument("-a", "--arch", help="Binary arch",
-                        choices=['arm', 'arm64', 'x86'], default=None, required=False)
-    parser.add_argument("-p", "--print", help="Do Not Patch, Just Print Details",
-                        action="store_true", required=False)
+    parser.add_argument(
+        "-b", "--binary", help="Path to the binary file", required=False
+    )
+    parser.add_argument(
+        "-a",
+        "--arch",
+        help="Binary arch",
+        choices=["arm", "arm64", "x86"],
+        default=None,
+        required=False,
+    )
+    parser.add_argument(
+        "-p",
+        "--print",
+        help="Do Not Patch, Just Print Details",
+        action="store_true",
+        required=False,
+    )
     args = parser.parse_args()
 
     if not args.arch:
