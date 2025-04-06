@@ -1005,6 +1005,21 @@ def modify_is_sponsored_method(file_path):
         print(e)
 
 
+def modify_is_sponsored_dis_method(file_path):
+    """Force isSponsoredDisabled True"""
+    new_method_code = [
+        ".method public isSponsoredDisabled()Z\n",
+        "    .locals 2\n",
+        "    const/4 v0, 0x1\n",
+        "    return v0\n",
+        ".end method\n",
+    ]
+    try:
+        modify_method(file_path, "public isSponsoredDisabled()Z", new_method_code)
+    except NoMethodFoundError as e:
+        print(e)
+
+
 def modify_is_proxy_sponsored_method(file_path):
     """Remove Proxy Sponsored Channels"""
     new_method_code = [
@@ -1179,6 +1194,12 @@ def main(selected_patch=None, root_directory=None):
             "Apply Anti Messages Delete Patch",
             lambda: automate_modification(
                 root_directory, "MessagesStorage.smali", modify_markMessagesAsDeleted
+            ),
+        ),
+        "18": (
+            "Modify isSponsoredDisabled to always return true",
+            lambda: automate_modification(
+                root_directory, "MessagesController.smali", modify_is_sponsored_dis_method
             ),
         ),
     }
