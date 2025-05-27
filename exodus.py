@@ -206,7 +206,9 @@ def main():
 
     if args.gen:
         if os.path.exists(args.rules):
-            print(f"File {args.rules} already , please don't abuse Exodus. Exiting.")
+            print(
+                f"File {args.rules} already exists, please don't abuse Exodus. Exiting."
+            )
             sys.exit(1)
         gen_rule()
         print("\033c", end="")
