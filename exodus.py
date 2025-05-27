@@ -205,6 +205,9 @@ def main():
     args = parser.parse_args()
 
     if args.gen:
+        if os.path.exists(args.rules):
+            print(f"File {args.rules} already , please don't abuse Exodus. Exiting.")
+            sys.exit(1)
         gen_rule()
         print("\033c", end="")
 
