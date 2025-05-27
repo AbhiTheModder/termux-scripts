@@ -1,0 +1,222 @@
+import importlib
+import os
+import sys
+import zipfile
+import argparse
+import json
+from collections import defaultdict
+
+# Define color codes
+RED = "\033[0;31m"
+GREEN = "\033[0;32m"
+YELLOW = "\033[0;33m"
+BLUE = "\033[0;34m"
+GREY = "\033[0;37m"
+DIM = "\033[2m"
+NC = "\033[0m"  # No Color
+
+
+def gen_rule():
+    """Generate YARA rules from Exodus API."""
+    import re
+    import requests
+
+    url = "https://reports.exodus-privacy.eu.org/api/trackers"
+    response = requests.get(url)
+    data = response.json()
+
+    trackers = data.get("trackers")
+
+    for i_d, info in trackers.items():
+        print(
+            info.get("name")
+            + " : "
+            + info.get("code_signature")
+            + " : "
+            + info.get("network_signature")
+        )
+
+    for i_d, info in trackers.items():
+        code_signature = (
+            info.get("code_signature").replace(".", "\\.").replace("/", r"\\")
+        )
+        code_signature2 = code_signature.replace(".", "/")
+        network_signature = info.get("network_signature").replace("/", r"\\")
+        if not code_signature and not network_signature:
+            continue
+        rule_name = re.sub(
+            r"[^a-zA-Z]", "_", info.get("name").strip().replace(" ", "_")
+        ).replace("__", "_")
+        yara_rule = f"""
+rule {rule_name} : tracker
+{{
+    meta:
+        description = "{info.get("name")}"
+        author      = "Abhi"
+        url         = "{info.get("website")}"
+
+    strings:
+    """
+        if code_signature:
+            yara_rule += f"    $code_signature    = /{code_signature}/"
+        if network_signature:
+            yara_rule += f"\n        $network_signature = /{network_signature}/"
+        if code_signature2:
+            yara_rule += f"\n        $code_signature2    = /{code_signature2}/"
+        if info.get("name") == "Google Ads":
+            admob_sig = "com.google.android.gms.ads.identifier".replace(
+                ".", "\\."
+            ).replace("/", r"\\")
+            admob_sig2 = admob_sig.replace(".", "/")
+            yara_rule += f"\n            $admob_sig     = /{admob_sig}/"
+            yara_rule += f"\n            $admob_sig2    = /{admob_sig2}/"
+
+        yara_rule += """
+
+    condition:
+        any of them
+}
+    """
+        existing_rules = ""
+        if os.path.exists("trackers.yara"):
+            with open("trackers.yara", "r") as f:
+                existing_rules = f.read()
+        if rule_name not in existing_rules:
+            with open(f"trackers.yara", "a") as f:
+                f.write(yara_rule)
+        else:
+            print(f"Duplicate rule name found: {rule_name}. Skipping.")
+
+
+def import_library(library_name: str, package_name: str = None):
+    """
+    Loads a library, or installs it in ImportError case
+    :param library_name: library name (import example...)
+    :param package_name: package name in PyPi (pip install example)
+    :return: loaded module
+    """
+    if package_name is None:
+        package_name = library_name
+
+    try:
+        return importlib.import_module(library_name)
+    except ImportError as exc:
+        import subprocess
+
+        completed = subprocess.run(
+            [sys.executable, "-m", "pip", "install", package_name], check=True
+        )
+        if completed.returncode != 0:
+            raise AssertionError(
+                f"Failed to install library {package_name} (pip exited with code {completed.returncode})"
+            ) from exc
+        return importlib.import_module(library_name)
+
+
+yara = import_library("yara", "yara-python-dex")
+
+
+def scan_apk(apk_path: str, rules_path: str):
+    """Scan APK and DEX files"""
+    rules = yara.compile(filepath=rules_path)
+    results = {
+        "apk": defaultdict(lambda: defaultdict(set)),
+        "dex": defaultdict(lambda: defaultdict(lambda: defaultdict(set))),
+    }
+
+    for match in rules.match(apk_path):
+        for _, offset, data in match.strings:
+            rule_type = str(offset).replace("$", "")
+            results["apk"][match.rule][rule_type].add(
+                data.decode("utf-8", errors="ignore")
+            )
+
+    with zipfile.ZipFile(apk_path, "r") as z:
+        for file in z.namelist():
+            if file.endswith(".dex") or file.endswith(".so"):
+                with z.open(file) as f:
+                    for match in rules.match(data=f.read()):
+                        for _, offset, data in match.strings:
+                            rule_type = str(offset).replace("$", "")
+                            results["dex"][file][match.rule][rule_type].add(
+                                data.decode("utf-8", errors="ignore")
+                            )
+
+    return results
+
+
+def to_json(results):
+    """Convert results to JSON"""
+    json_results = {"apk": {}, "dex": {}}
+
+    for rule, types_dict in results["apk"].items():
+        json_results["apk"][rule] = {
+            rule_type: sorted(list(sigs)) for rule_type, sigs in types_dict.items()
+        }
+
+    for dex_file, rules_dict in results["dex"].items():
+        json_results["dex"][dex_file] = {
+            rule: {
+                rule_type: sorted(list(sigs)) for rule_type, sigs in types_dict.items()
+            }
+            for rule, types_dict in rules_dict.items()
+        }
+
+    return json_results
+
+
+def print_matches(results):
+    """Print matches"""
+    if results["apk"]:
+        print(f"{GREEN}Matches in APK:{NC}")
+        for rule, types_dict in sorted(results["apk"].items()):
+            print(f"\n{YELLOW}Rule: {rule}{NC}")
+            for rule_type, sigs in sorted(types_dict.items()):
+                print(f"{BLUE}Type: {DIM}{rule_type.replace('2', '')}{NC}")
+                for sig in sorted(sigs):
+                    print(f"{GREY}  {sig}{NC}")
+
+    if results["dex"]:
+        for dex_file, rules_dict in sorted(results["dex"].items()):
+            print(f"\n{GREEN}Matches in {dex_file}:{NC}")
+            for rule, types_dict in sorted(rules_dict.items()):
+                print(f"\n{YELLOW}Rule: {rule}{NC}")
+                for rule_type, sigs in sorted(types_dict.items()):
+                    print(f"{BLUE}Type: {DIM}{rule_type.replace('2', '')}{NC}")
+                    for sig in sorted(sigs):
+                        print(f"{GREY}  {sig}{NC}")
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Exodus CLI")
+    parser.add_argument("apk", help="Path to APK file")
+    parser.add_argument(
+        "-r",
+        "--rules",
+        nargs="?",
+        default="trackers.yara",
+        const="trackers.yara",
+        help="Path to YARA rules file",
+    )
+    parser.add_argument(
+        "-j", "--json", nargs="?", const="output.json", help="Save results to JSON file"
+    )
+    parser.add_argument("-g", "--gen", action="store_true", help="Generate YARA rules")
+    args = parser.parse_args()
+
+    if args.gen:
+        gen_rule()
+        print("\033c", end="")
+
+    results = scan_apk(args.apk, args.rules)
+
+    if args.json:
+        with open(args.json, "w") as f:
+            json.dump(to_json(results), f, indent=2)
+        print(f"Results saved to {args.json}")
+    else:
+        print_matches(results)
+
+
+if __name__ == "__main__":
+    main()
