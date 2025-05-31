@@ -16,8 +16,12 @@ DIM = "\033[2m"
 NC = "\033[0m"  # No Color
 
 
-def gen_rule():
-    """Generate YARA rules from Exodus API."""
+def gen_rule(apkid: bool = False):
+    """Generate YARA rules from Exodus API.
+
+    Args:
+       apkid (bool, optional): Generate rules for APKiD. Defaults to False.
+    """
     import re
     import requests
 
@@ -27,65 +31,152 @@ def gen_rule():
 
     trackers = data.get("trackers")
 
-    for i_d, info in trackers.items():
-        print(
-            info.get("name")
-            + " : "
-            + info.get("code_signature")
-            + " : "
-            + info.get("network_signature")
-        )
-
-    for i_d, info in trackers.items():
-        code_signature = (
-            info.get("code_signature").replace(".", "\\.").replace("/", r"\\")
-        )
+    for _, info in trackers.items():
+        code_signature = info.get("code_signature")
+        network_signature = info.get("network_signature")
+        if network_signature == "\\.facebook\\.com":
+            network_signature = ""
+        if info.get("name") == "Google Ads":
+            network_signature = ""
+            code_signature = "com.google.android.gms.ads.identifier"
+        code_signature = code_signature.replace(".", "\\.").replace("/", r"\\")
+        network_signature = network_signature.replace("/", r"\\")
         code_signature2 = code_signature.replace(".", "/")
-        network_signature = info.get("network_signature").replace("/", r"\\")
         if not code_signature and not network_signature:
             continue
         rule_name = re.sub(
             r"[^a-zA-Z]", "_", info.get("name").strip().replace(" ", "_")
         ).replace("__", "_")
-        yara_rule = f"""
-rule {rule_name} : tracker
+        if rule_name.endswith("_"):
+            rule_name = rule_name[:-1]
+        rule_name = rule_name.lower()
+
+        if apkid:
+            yara_rules = {
+                "dex": f"""
+rule {rule_name}_dex : tracker
 {{
     meta:
-        description = "{info.get("name")}"
+        description = "{info.get("name").replace("Google", "G.").replace("Facebook", "FB.").replace("Notifications", "Notifs")}"
         author      = "Abhi"
         url         = "{info.get("website")}"
 
     strings:
-    """
-        if code_signature:
-            yara_rule += f"    $code_signature    = /{code_signature}/"
-        if network_signature:
-            yara_rule += f"\n        $network_signature = /{network_signature}/"
-        if code_signature2:
-            yara_rule += f"\n        $code_signature2    = /{code_signature2}/"
-        if info.get("name") == "Google Ads":
-            admob_sig = "com.google.android.gms.ads.identifier".replace(
-                ".", "\\."
-            ).replace("/", r"\\")
-            admob_sig2 = admob_sig.replace(".", "/")
-            yara_rule += f"\n            $admob_sig     = /{admob_sig}/"
-            yara_rule += f"\n            $admob_sig2    = /{admob_sig2}/"
+""",
+                "apk": f"""
+rule {rule_name}_apk : tracker
+{{
+    meta:
+        description = "{info.get("name").replace("Google", "G.").replace("Facebook", "FB.").replace("Notifications", "Notifs")}"
+        author      = "Abhi"
+        url         = "{info.get("website")}"
 
-        yara_rule += """
+    strings:
+""",
+                "elf": f"""
+rule {rule_name}_elf : tracker
+{{
+    meta:
+        description = "{info.get("name").replace("Google", "G.").replace("Facebook", "FB.").replace("Notifications", "Notifs")}"
+        author      = "Abhi"
+        url         = "{info.get("website")}"
+
+    strings:
+""",
+            }
+
+            if code_signature:
+                yara_rules["dex"] += f"        $code_signature    = /{code_signature}/"
+                yara_rules["apk"] += f"        $code_signature    = /{code_signature}/"
+                yara_rules["elf"] += f"        $code_signature    = /{code_signature}/"
+            if network_signature:
+                yara_rules["dex"] += (
+                    f"\n        $network_signature = /{network_signature}/"
+                )
+                yara_rules["apk"] += (
+                    f"\n        $network_signature = /{network_signature}/"
+                )
+                yara_rules["elf"] += (
+                    f"\n        $network_signature = /{network_signature}/"
+                )
+            if code_signature2:
+                yara_rules["dex"] += (
+                    f"\n        $code_signature2   = /{code_signature2}/"
+                )
+                yara_rules["apk"] += (
+                    f"\n        $code_signature2   = /{code_signature2}/"
+                )
+                yara_rules["elf"] += (
+                    f"\n        $code_signature2   = /{code_signature2}/"
+                )
+
+            yara_rules["dex"] += """
+
+    condition:
+        is_dex and any of them
+}
+"""
+            yara_rules["apk"] += """
+
+    condition:
+        is_apk and any of them
+}
+"""
+            yara_rules["elf"] += """
+
+    condition:
+        is_elf and any of them
+}
+"""
+
+            for file_type, yara_rule in yara_rules.items():
+                existing_rules = ""
+                if not os.path.exists(f"apkid/rules/{file_type}/trackers.yara"):
+                    with open(f"apkid/rules/{file_type}/trackers.yara", "w") as f:
+                        f.write('include "common.yara"\n')
+                if os.path.exists(f"apkid/rules/{file_type}/trackers.yara"):
+                    with open(f"apkid/rules/{file_type}/trackers.yara", "r") as f:
+                        existing_rules = f.read()
+                if rule_name not in existing_rules:
+                    with open(f"apkid/rules/{file_type}/trackers.yara", "a") as f:
+                        f.write(yara_rule)
+                else:
+                    print(
+                        f"\rDuplicate rule name found: {rule_name}. Skipping.", end=""
+                    )
+        else:
+            yara_rule = f"""
+rule {rule_name} : tracker
+{{
+    meta:
+        description = "{info.get("name").replace("Google", "G.").replace("Facebook", "FB.").replace("Notifications", "Notifs")}"
+        author      = "Abhi"
+        url         = "{info.get("website")}"
+
+    strings:
+"""
+            if code_signature:
+                yara_rule += f"    $code_signature    = /{code_signature}/"
+            if network_signature:
+                yara_rule += f"\n        $network_signature = /{network_signature}/"
+            if code_signature2:
+                yara_rule += f"\n        $code_signature2   = /{code_signature2}/"
+
+            yara_rule += """
 
     condition:
         any of them
 }
-    """
-        existing_rules = ""
-        if os.path.exists("trackers.yara"):
-            with open("trackers.yara", "r") as f:
-                existing_rules = f.read()
-        if rule_name not in existing_rules:
-            with open(f"trackers.yara", "a") as f:
-                f.write(yara_rule)
-        else:
-            print(f"Duplicate rule name found: {rule_name}. Skipping.")
+"""
+            existing_rules = ""
+            if os.path.exists("trackers.yara"):
+                with open("trackers.yara", "r") as f:
+                    existing_rules = f.read()
+            if rule_name not in existing_rules:
+                with open(f"trackers.yara", "a") as f:
+                    f.write(yara_rule)
+            else:
+                print(f"Duplicate rule name found: {rule_name}. Skipping.")
 
 
 def import_library(library_name: str, package_name: str = None):
@@ -189,7 +280,7 @@ def print_matches(results):
 
 def main():
     parser = argparse.ArgumentParser(description="Exodus CLI")
-    parser.add_argument("apk", help="Path to APK file")
+    parser.add_argument("apk", nargs="?", help="Path to APK file")
     parser.add_argument(
         "-r",
         "--rules",
@@ -201,7 +292,13 @@ def main():
     parser.add_argument(
         "-j", "--json", nargs="?", const="output.json", help="Save results to JSON file"
     )
-    parser.add_argument("-g", "--gen", action="store_true", help="Generate YARA rules")
+    parser.add_argument(
+        "-g",
+        "--gen",
+        nargs="?",
+        const="",
+        help="Generate YARA rules. Use 'apkid' to generate rules from APKID.",
+    )
     args = parser.parse_args()
 
     if args.gen:
@@ -210,8 +307,17 @@ def main():
                 f"File {args.rules} already exists, please don't abuse Exodus. Exiting."
             )
             sys.exit(1)
-        gen_rule()
-        print("\033c", end="")
+
+        gen_rule(True) if args.gen == "apkid" else gen_rule()
+        print()
+
+        print("\033c", end="") if args.apk else None
+        sys.exit(0) if not args.apk else None
+
+    if not args.apk:
+        print(f"{RED}ERROR:{NC} The following arguments are required: apk{NC}")
+        parser.print_help()
+        sys.exit(1)
 
     results = scan_apk(args.apk, args.rules)
 
