@@ -22,6 +22,10 @@ pip install setuptools
 # FRIDA_VERSION=$(curl --silent "https://api.github.com/repos/frida/frida/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
 FRIDA_VERSION=17.0.4
 
+# Let the user know about it
+
+printf "\033[0;33mFRIDA 17.0.4 is being installed since latest typescript-go compiler introduced some issues inside official devkit, temporarily until i can figure something out (maybe)\033[0m"
+
 DARCH=$(uname -m)
 
 if [ "$DARCH" == "aarch64" ]; then
