@@ -210,6 +210,7 @@ def import_library(library_name: str, package_name: str = None):
         return importlib.import_module(library_name)
 
 
+import_library("requests")
 yara = import_library("yara", "yara-python-dex")
 
 
