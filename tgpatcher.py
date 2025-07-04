@@ -386,6 +386,8 @@ def modify_markMessagesAsDeleted(file_path):
     """Modify markMessagesAsDeleted methods"""
     smali_dir = os.path.dirname(file_path).split("/")[0:2]
     root_dir = os.path.dirname(file_path).split("/")[0]
+    if "archive-info.json" in os.listdir(root_dir):
+        smali_dir.append("classes")
     smali_dir = "/".join(smali_dir)
     new_dir = os.path.join(smali_dir, "org", "telegram", "abhi")
     if not os.path.exists(new_dir):
