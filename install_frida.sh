@@ -16,15 +16,8 @@ pkg i -y python git
 
 pip install setuptools
 
-# Temporarily, because frida changed it's compiler backend to typescript-go
-# which breaks things on android side
-# ImportError: dlopen failed: TLS symbol "(null)" in dlopened "/data/data/com.termux/files/usr/lib/python3.12/site-packages/frida/_frida.abi3.so" referenced from "/data/data/com.termux/files/usr/lib/python3.12/site-packages/frida/_frida.abi3.so" using IE access model
-# FRIDA_VERSION=$(curl --silent "https://api.github.com/repos/frida/frida/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
-FRIDA_VERSION=17.0.7
-
-# Let the user know about it
-
-printf "\033[0;33mFRIDA 17.0.7 is being installed since latest typescript-go compiler introduced some issues inside official devkit\033[0m"
+FRIDA_VERSION=$(curl --silent "https://api.github.com/repos/frida/frida/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+# FRIDA_VERSION=17.0.7
 
 DARCH=$(uname -m)
 
@@ -62,4 +55,4 @@ if [ -d "$HOME/frida-python-android" ]; then
   cd $HOME
 fi
 
-pip install --upgrade frida-tools==14.0.2
+pip install --upgrade frida-tools
