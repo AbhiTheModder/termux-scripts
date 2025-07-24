@@ -34,3 +34,4 @@ This repo also hosts the github workflow to automate this script and for version
 8. **DexRepair.py:** A simple command-line tool for repairing DEX files. It fixes the DEX magic number and updates the checksum and signature in the DEX header. Used in my [@RevEngiBot](https://github.com/RevEngiSquad) project made public :)
 9. **cocos2d.py:** Simple script to decrypt cocos2d encrypted `.jsc` files.
 10. **exodus.py:** Simple script to scan apk for trackers using Exodus Privacy API.
+11. **ssl_patch.py:** Patch SSL Verification in APK(s).

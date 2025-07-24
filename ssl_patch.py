@@ -17,7 +17,10 @@ NC = "\033[0m"
 APKEDITOR_PATH = "APKEditor.jar"  # Please replace with your apkeditor path :)
 OKHTTP3_SEARCH_REGEX = r"(\.method public (final )?\S+\(Ljava/lang/String;L[^;]+;\)V)(?:(?!\.end\smethod)[\s\S])*?check-cast [vp]\d+, Ljava/security/cert/X509Certificate;(?:(?!\.end\smethod)[\s\S])*?Ljavax/net/ssl/SSLPeerUnverifiedException;(?:(?!\.end\smethod)[\s\S])*?\.end\smethod"
 OKHTTP3_REPLACE_REGEX = r"\1\n\t.registers 3\n\n\treturn-void\n.end method"
-
+JAVAX_SEARCH_REGEX = r"(\.method public (final )?\S+\(Ljava/lang/String;Ljavax/net/ssl/SSLSession;\)Z)(?:(?!\.end\smethod)[\s\S])*?\.end\smethod"
+JAVAX_REPLACE_REGEX = (
+    r"\1\n\t.registers 3\n\n\tconst/4 v0, 0x1\n\n\treturn v0\n.end method"
+)
 XML_CONTENT = """<?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
     <base-config cleartextTrafficPermitted="true">
@@ -279,6 +282,9 @@ def modify_apk(temp_dir: str, okhttp: bool) -> None:
         if okhttp:
             apply_regex(
                 f"{temp_dir}/out/smali", OKHTTP3_SEARCH_REGEX, OKHTTP3_REPLACE_REGEX
+            )
+            apply_regex(
+                f"{temp_dir}/out/smali", JAVAX_SEARCH_REGEX, JAVAX_REPLACE_REGEX
             )
         modify_manifest(f"{temp_dir}/out/AndroidManifest.xml")
         modify_public_xml(f"{temp_dir}/out/resources/package_1/res/values/public.xml")
