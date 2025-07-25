@@ -1,3 +1,5 @@
+#!/data/data/com.termux/files/usr/bin/bash
+
 if ! command -v termux-setup-storage; then
   echo "This script can be executed only on Termux"
   exit 1
@@ -20,7 +22,7 @@ note="$(tput setaf 6)"
 
 echo "${green}━━━ Basic Requirements Setup ━━━${nocolor}"
 
-pkg install -y python git cmake rust clang make wget ndk-sysroot zlib libxml2 libxslt pkg-config libjpeg-turbo build-essential binutils openssl
+pkg install -y python git cmake rust clang make wget ndk-sysroot zlib libxml2 libxslt pkg-config libjpeg-turbo build-essential binutils openssl aapt
 # UnComment below line if you face clang error during installation procedure
 # _file=$(find $PREFIX/lib/python3.11/_sysconfigdata*.py)
 # rm -rf $PREFIX/lib/python3.11/__pycache__
@@ -63,28 +65,18 @@ if [ -f "ndk-install.sh" ]; then
   rm ndk-install.sh
 fi
 
-if [ -d "$HOME/android-sdk/ndk/17.2.4988734" ]; then
-  ndk_version="17.2.4988734"
-elif [ -d "$HOME/android-sdk/ndk/18.1.5063045" ]; then
-  ndk_version="18.1.5063045"
-elif [ -d "$HOME/android-sdk/ndk/19.2.5345600" ]; then
-  ndk_version="19.2.5345600"
-elif [ -d "$HOME/android-sdk/ndk/20.1.5948944" ]; then
-  ndk_version="20.1.5948944"
-elif [ -d "$HOME/android-sdk/ndk/21.4.7075529" ]; then
-  ndk_version="21.4.7075529"
-elif [ -d "$HOME/android-sdk/ndk/22.1.7171670" ]; then
-  ndk_version="22.1.7171670"
-elif [ -d "$HOME/android-sdk/ndk/23.2.8568313" ]; then
-  ndk_version="23.2.8568313"
-elif [ -d "$HOME/android-sdk/ndk/24.0.8215888" ]; then
-  ndk_version="24.0.8215888"
-elif [ -d "$HOME/android-sdk/ndk/26.1.10909125" ]; then
-  ndk_version="26.1.10909125"
-elif [ -d "$HOME/android-sdk/ndk/27.1.12297006" ]; then
-  ndk_version="27.1.12297006"
-else
-  echo "${red}You didn't Installed any ndk terminating!"
+ndk_versions=("17.2.4988734" "18.1.5063045" "19.2.5345600" "20.1.5948944" "21.4.7075529" "22.1.7171670" "23.2.8568313" "24.0.8215888" "26.1.10909125" "27.1.12297006" "27.2.12479018" "28.1.13356709" "29.0.13113456")
+ndk_version=""
+
+for version in "${ndk_versions[@]}"; do
+  if [ -d "$HOME/android-sdk/ndk/$version" ]; then
+    ndk_version="$version"
+    break
+  fi
+done
+
+if [ -z "$ndk_version" ]; then
+  echo "${red}You didn't install any NDK. Terminating!"
   exit 1
 fi
 echo "${yellow}ANDROID NDK Successfully Installed!${nocolor}"
@@ -122,12 +114,47 @@ fi
 cd ~/dex2c
 python3 -m pip install -r requirements.txt || exit 2
 
+update_rc() {
+  local file="$1"
+  sed -i '/export ANDROID_HOME=/d' "$file"
+  sed -i '/export PATH=.*\/android-sdk\/cmdline-tools\/latest\/bin/d' "$file"
+  sed -i '/export PATH=.*\/android-sdk\/platform-tools/d' "$file"
+  sed -i '/export PATH=.*\/android-sdk\/build-tools\/34.0.4/d' "$file"
+  sed -i '/export PATH=.*\/android-sdk\/ndk\/.*/d' "$file"
+  sed -i '/export ANDROID_NDK_ROOT=/d' "$file"
+
+  echo -e "export ANDROID_HOME=$HOME/android-sdk\nexport PATH=\$PATH:$HOME/android-sdk/cmdline-tools/latest/bin\nexport PATH=\$PATH:$HOME/android-sdk/platform-tools\nexport PATH=\$PATH:$HOME/android-sdk/build-tools/34.0.4\nexport PATH=\$PATH:$HOME/android-sdk/ndk/$ndk_version\nexport ANDROID_NDK_ROOT=$HOME/android-sdk/ndk/$ndk_version" >> "$file"
+}
+
+update_xonsh_rc() {
+  local file="$1"
+  sed -i '/\$ANDROID_HOME =/d' "$file"
+  sed -i '/\$PATH.*\/android-sdk\/cmdline-tools\/latest\/bin/d' "$file"
+  sed -i '/\$PATH.*\/android-sdk\/platform-tools/d' "$file"
+  sed -i '/\$PATH.*\/android-sdk\/build-tools\/34.0.4/d' "$file"
+  sed -i '/\$PATH.*\/android-sdk\/ndk\/.*/d' "$file"
+  sed -i '/\$ANDROID_NDK_ROOT =/d' "$file"
+  cat <<EOF >> "$file"
+\$ANDROID_HOME = "${HOME}/android-sdk"
+\$PATH.append('${HOME}/android-sdk/cmdline-tools/latest/bin')
+\$PATH.append('${HOME}/android-sdk/platform-tools')
+\$PATH.append('${HOME}/android-sdk/build-tools/34.0.4')
+\$PATH.append('${HOME}/android-sdk/ndk/${ndk_version}')
+\$ANDROID_NDK_ROOT = "${HOME}/android-sdk/ndk/${ndk_version}"
+EOF
+}
+
 if [ -f "$HOME/.bashrc" ]; then
-  echo -e "export ANDROID_HOME=$HOME/android-sdk\nexport PATH=\$PATH:$HOME/android-sdk/cmdline-tools/latest/bin\nexport PATH=\$PATH:$HOME/android-sdk/platform-tools\nexport PATH=\$PATH:$HOME/android-sdk/build-tools/34.0.4\nexport PATH=\$PATH:$HOME/android-sdk/ndk/$ndk_version\nexport ANDROID_NDK_ROOT=$HOME/android-sdk/ndk/$ndk_version" >> ~/.bashrc
-elif [ -f "$HOME/.zshrc" ]; then
-  echo -e "export ANDROID_HOME=$HOME/android-sdk\nexport PATH=\$PATH:$HOME/android-sdk/cmdline-tools/latest/bin\nexport PATH=\$PATH:$HOME/android-sdk/platform-tools\nexport PATH=\$PATH:$HOME/android-sdk/build-tools/34.0.4\nexport PATH=\$PATH:$HOME/android-sdk/ndk/$ndk_version\nexport ANDROID_NDK_ROOT=$HOME/android-sdk/ndk/$ndk_version" >> ~/.zshrc
-else
-  echo -e "export ANDROID_HOME=$HOME/android-sdk\nexport PATH=\$PATH:$HOME/android-sdk/cmdline-tools/latest/bin\nexport PATH=\$PATH:$HOME/android-sdk/platform-tools\nexport PATH=\$PATH:$HOME/android-sdk/build-tools/34.0.4\nexport PATH=\$PATH:$HOME/android-sdk/ndk/$ndk_version\nexport ANDROID_NDK_ROOT=$HOME/android-sdk/ndk/$ndk_version" >> $PREFIX/etc/bash.bashrc
+  update_rc "$HOME/.bashrc"
+fi
+if [ -f "$HOME/.zshrc" ]; then
+  update_rc "$HOME/.zshrc"
+fi
+if [ -f "$HOME/.xonshrc" ]; then
+  update_xonsh_rc "$HOME/.xonshrc"
+fi
+if [ -f "$PREFIX/etc/bash.bashrc" ]; then
+  update_rc "$PREFIX/etc/bash.bashrc"
 fi
 
 cat > $HOME/dex2c/dcc.cfg << EOL
