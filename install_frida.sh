@@ -83,7 +83,11 @@ if [ -f "frida-core-devkit-android-$DARCH.tar.xz" ]; then
 fi
 
 if [ "$(version "$FRIDA_VERSION")" -le "$(version "17.0.7")" ]; then
-  TOOLS_VERSION="<=14.0.2"
+  if [ "$(version "$FRIDA_VERSION")" -lt "$(version "17.0.0")" ]; then
+    TOOLS_VERSION="<=13.7.1"
+  else
+    TOOLS_VERSION="<=14.0.2"
+  fi
   git clone https://github.com/AbhiTheModder/frida-python frida-python-android -b 17.0.7
 else
   TOOLS_VERSION=">14.0.2"
