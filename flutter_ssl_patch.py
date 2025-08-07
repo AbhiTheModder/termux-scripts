@@ -99,7 +99,7 @@ def get_r2_version():
         # Extract the version number from the output
         results = result.stdout.strip().split()
         for result in results:
-            if result.startswith("5."):
+            if result.startswith(("5.", "6.")):
                 result = result.split("-")[0]
                 return result
         return None
