@@ -7,6 +7,8 @@ fi
 
 clear
 
+set -e
+
 echo -e "\033[0mTermux has \033[1;32mresumed support for official Frida builds\033[0m via its package manager as of late July 2025!"
 echo ""
 
