@@ -118,19 +118,14 @@ def recompile_apk(temp_dir: str, file_name: str) -> None:
 def find_next_id(root) -> str:
     xml_ids = set()
     pattern = re.compile(r"0x7f[0-9a-f]{6}")
-    base = None
 
     for elem in root.findall("public"):
         if elem.get("type") == "xml":
             id_value = elem.get("id")
-            # print(id_value)
-            if not base:
-                base = int(id_value, 16) & 0xFFFF0000
             if pattern.match(id_value):
                 xml_ids.add(int(id_value, 16))
 
-    if not base:
-        base = 0x7F150000
+    base = 0x7f1f0000
 
     current = base
     while current in xml_ids:
