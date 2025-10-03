@@ -182,22 +182,33 @@ def modify_public_xml(xml_file: str) -> None:
     tree.write(xml_file, encoding="utf-8", xml_declaration=True)
 
 
-def modify_xml(patch_path: str) -> None:
+def modify_xml(temp_dir: str, nsc: str | None = None) -> None:
     import xml.etree.ElementTree as ET  # skipcq
 
     import defusedxml.ElementTree as DET
 
     config_file_path = None
-    for root, _, files in os.walk(patch_path):
-        for file in files:
-            if file == "network_security_config.xml":
-                config_file_path = os.path.join(root, file)
+    res_path = f"{temp_dir}/out/resources"
+    patch_paths = os.listdir(res_path)
+    if nsc:
+        file_name = nsc.replace("@xml/", "") + ".xml"
+    else:
+        file_name = "network_security_config.xml"
+    for patch_path in patch_paths:
+        patch_path = res_path + "/" + patch_path + "/res/xml"
+        for root, _, files in os.walk(patch_path):
+            for file in files:
+                if file == file_name:
+                    config_file_path = os.path.join(root, file)
+                    break
+            if config_file_path:
                 break
-        if config_file_path:
-            break
 
     if not config_file_path:
-        config_file_path = os.path.join(patch_path, "network_security_config.xml")
+        config_file_path = os.path.join(
+            res_path, patch_paths[0], "res/xml/network_security_config.xml"
+        )
+        os.makedirs(os.path.join(res_path, patch_paths[0], "res/xml/"), exist_ok=True)
         with open(config_file_path, "w") as f:
             f.write(XML_CONTENT)
     else:
@@ -256,7 +267,7 @@ def modify_xml(patch_path: str) -> None:
             f.write(xml_str)
 
 
-def modify_manifest(manifest_path: str) -> None:
+def modify_manifest(manifest_path: str) -> str:
     import xml.etree.ElementTree as ET  # skipcq
 
     import defusedxml.ElementTree as DET
@@ -274,6 +285,8 @@ def modify_manifest(manifest_path: str) -> None:
 
     application = root.find("application")
     nsc = "@xml/network_security_config"
+    if f"{{{ns}}}networkSecurityConfig" in application.attrib:
+        nsc = application.attrib[f"{{{ns}}}networkSecurityConfig"]
     application.set(f"{{{ns}}}networkSecurityConfig", nsc)
 
     application.set(f"{{{ns}}}usesCleartextTraffic", "true")
@@ -283,6 +296,8 @@ def modify_manifest(manifest_path: str) -> None:
 
     with open(manifest_path, "w") as f:
         f.write(output)
+
+    return nsc
 
 
 def modify_apk(temp_dir: str, okhttp: bool) -> None:
@@ -299,11 +314,15 @@ def modify_apk(temp_dir: str, okhttp: bool) -> None:
             apply_regex(
                 f"{temp_dir}/out/smali", JAVAX_SEARCH_REGEX, JAVAX_REPLACE_REGEX
             )
-        modify_manifest(f"{temp_dir}/out/AndroidManifest.xml")
-        modify_public_xml(f"{temp_dir}/out/resources/package_1/res/values/public.xml")
-        xml_path = f"{temp_dir}/out/resources/package_1/res/xml"
-        os.makedirs(xml_path, exist_ok=True)
-        modify_xml(xml_path)
+        nsc = modify_manifest(f"{temp_dir}/out/AndroidManifest.xml")
+        os.makedirs(temp_dir, exist_ok=True)
+        if nsc == "@xml/network_security_config":
+            modify_public_xml(
+                f"{temp_dir}/out/resources/package_1/res/values/public.xml"
+            )
+            modify_xml(temp_dir)
+        else:
+            modify_xml(temp_dir, nsc)
         for lib_dir in lib_dirs:
             if os.path.exists(lib_dir):
                 for file in os.listdir(lib_dir):
