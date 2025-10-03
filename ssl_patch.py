@@ -261,7 +261,8 @@ def modify_manifest(manifest_path: str) -> None:
 
     import defusedxml.ElementTree as DET
 
-    ET.register_namespace("android", "http://schemas.android.com/apk/res/android")
+    ns = "http://schemas.android.com/apk/res/android"
+    ET.register_namespace("android", ns)
 
     with open(manifest_path, "r") as f:
         file_contents = f.read()
@@ -273,9 +274,9 @@ def modify_manifest(manifest_path: str) -> None:
 
     application = root.find("application")
     nsc = "@xml/network_security_config"
-    application.set("android:networkSecurityConfig", nsc)
+    application.set(f"{{{ns}}}networkSecurityConfig", nsc)
 
-    application.set("android:usesCleartextTraffic", "true")
+    application.set(f"{{{ns}}}usesCleartextTraffic", "true")
 
     xml_str = ET.tostring(root, encoding="utf-8").decode()
     output = before_manifest + xml_str
