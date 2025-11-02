@@ -3,7 +3,10 @@ import importlib
 import io
 import json
 import os
+import re
 import sys
+import urllib.error
+import urllib.request
 import zipfile
 from collections import defaultdict
 
@@ -21,19 +24,16 @@ DEX_MAGIC = b"dex\n"
 ELF_MAGIC = b"\x7fELF"
 
 
-def gen_rule(apkid: bool = False):
-    """Generate YARA rules from Exodus API.
-
-    Args:
-       apkid (bool, optional): Generate rules for APKiD. Defaults to False.
-    """
-    import re
-
-    import requests
-
+def gen_rule():
+    """Generate YARA rules from Exodus API."""
     url = "https://reports.exodus-privacy.eu.org/api/trackers"
-    response = requests.get(url)
-    data = response.json()
+    try:
+        with urllib.request.urlopen(url) as response:
+            data_bytes = response.read()
+        data = json.loads(data_bytes)
+    except urllib.error.URLError:
+        print(f"Error connecting to {url}. Skipping rule generation.", file=sys.stderr)
+        return
 
     trackers = data.get("trackers")
 
@@ -57,135 +57,41 @@ def gen_rule(apkid: bool = False):
             rule_name = rule_name[:-1]
         rule_name = rule_name.lower()
 
-        if apkid:
-            yara_rules = {
-                "dex": f"""
-rule {rule_name}_dex : tracker
-{{
-    meta:
-        description = "{info.get("name").replace("Google", "G.").replace("Facebook", "FB.").replace("Notifications", "Notifs")}"
-        author      = "Abhi"
-        url         = "{info.get("website")}"
-
-    strings:
-""",
-                "apk": f"""
-rule {rule_name}_apk : tracker
-{{
-    meta:
-        description = "{info.get("name").replace("Google", "G.").replace("Facebook", "FB.").replace("Notifications", "Notifs")}"
-        author      = "Abhi"
-        url         = "{info.get("website")}"
-
-    strings:
-""",
-                "elf": f"""
-rule {rule_name}_elf : tracker
-{{
-    meta:
-        description = "{info.get("name").replace("Google", "G.").replace("Facebook", "FB.").replace("Notifications", "Notifs")}"
-        author      = "Abhi"
-        url         = "{info.get("website")}"
-
-    strings:
-""",
-            }
-
-            if code_signature:
-                yara_rules["dex"] += f"        $code_signature    = /{code_signature}/"
-                yara_rules["apk"] += f"        $code_signature    = /{code_signature}/"
-                yara_rules["elf"] += f"        $code_signature    = /{code_signature}/"
-            if network_signature:
-                yara_rules["dex"] += (
-                    f"\n        $network_signature = /{network_signature}/"
-                )
-                yara_rules["apk"] += (
-                    f"\n        $network_signature = /{network_signature}/"
-                )
-                yara_rules["elf"] += (
-                    f"\n        $network_signature = /{network_signature}/"
-                )
-            if code_signature2:
-                yara_rules["dex"] += (
-                    f"\n        $code_signature2   = /{code_signature2}/"
-                )
-                yara_rules["apk"] += (
-                    f"\n        $code_signature2   = /{code_signature2}/"
-                )
-                yara_rules["elf"] += (
-                    f"\n        $code_signature2   = /{code_signature2}/"
-                )
-
-            yara_rules["dex"] += """
-
-    condition:
-        is_dex and any of them
-}
-"""
-            yara_rules["apk"] += """
-
-    condition:
-        is_apk and any of them
-}
-"""
-            yara_rules["elf"] += """
-
-    condition:
-        is_elf and any of them
-}
-"""
-
-            for file_type, yara_rule in yara_rules.items():
-                existing_rules = ""
-                if not os.path.exists(f"apkid/rules/{file_type}/trackers.yara"):
-                    with open(f"apkid/rules/{file_type}/trackers.yara", "w") as f:
-                        f.write('include "common.yara"\n')
-                if os.path.exists(f"apkid/rules/{file_type}/trackers.yara"):
-                    with open(f"apkid/rules/{file_type}/trackers.yara", "r") as f:
-                        existing_rules = f.read()
-                if rule_name not in existing_rules:
-                    with open(f"apkid/rules/{file_type}/trackers.yara", "a") as f:
-                        f.write(yara_rule)
-                else:
-                    print(
-                        f"\rDuplicate rule name found: {rule_name}. Skipping.", end=""
-                    )
-        else:
-            yara_rule = f"""
+        yara_rule = f"""
 rule {rule_name} : tracker
 {{
     meta:
         description = "{info.get("name").replace("Google", "G.").replace("Facebook", "FB.").replace("Notifications", "Notifs")}"
-        author      = "Abhi"
+        author      = "Abhi & Exodus API"
         url         = "{info.get("website")}"
 
     strings:
 """
-            if code_signature:
-                yara_rule += f"        $code_signature    = /{code_signature}/"
-            if network_signature:
-                yara_rule += f"\n        $network_signature = /{network_signature}/"
-            if code_signature2:
-                yara_rule += f"\n        $code_signature2   = /{code_signature2}/"
+        if code_signature:
+            yara_rule += f"        $code_signature    = /{code_signature}/"
+        if network_signature:
+            yara_rule += f"\n        $network_signature = /{network_signature}/"
+        if code_signature2:
+            yara_rule += f"\n        $code_signature2   = /{code_signature2}/"
 
-            yara_rule += """
+        yara_rule += """
 
     condition:
         any of them
 }
 """
-            existing_rules = ""
-            if os.path.exists("trackers.yara"):
-                with open("trackers.yara", "r") as f:
-                    existing_rules = f.read()
-            if rule_name not in existing_rules:
-                with open(f"trackers.yara", "a") as f:
-                    f.write(yara_rule)
-            else:
-                print(f"Duplicate rule name found: {rule_name}. Skipping.")
+        existing_rules = ""
+        if os.path.exists("trackers.yara"):
+            with open("trackers.yara", "r") as f:
+                existing_rules = f.read()
+        if rule_name not in existing_rules:
+            with open("trackers.yara", "a") as f:
+                f.write(yara_rule)
+        else:
+            print(f"Duplicate rule name found: {rule_name}. Skipping.")
 
 
-def import_library(library_name: str, package_name: str = None):
+def import_library(library_name: str, package_name: str | None = None):
     """
     Loads a library, or installs it in ImportError case
     :param library_name: library name (import example...)
@@ -210,7 +116,6 @@ def import_library(library_name: str, package_name: str = None):
         return importlib.import_module(library_name)
 
 
-import_library("requests")
 yara = import_library("yara", "yara-python-dex")
 
 
@@ -353,7 +258,7 @@ def main():
         "--gen",
         nargs="?",
         const="default",
-        help="Generate YARA rules. Use 'apkid' to generate rules from APKID.",
+        help="Generate YARA rules.",
     )
     args = parser.parse_args()
 
@@ -364,7 +269,7 @@ def main():
             )
             sys.exit(1)
 
-        gen_rule(True) if args.gen == "apkid" else gen_rule()
+        gen_rule()
         print()
 
         print("\033c", end="") if args.apk else None
