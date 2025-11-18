@@ -354,12 +354,18 @@ def apply_EnableScreenshots3(root_directory):
     search_pattern = r"or-int/lit16\s+([vp]\d+),\s+([vp]\d+),\s+0x2000"
     replace_pattern = r"or-int/lit16 \1, \1, 0x0"
 
+    search_pattern2 = r"-0x7ffedef8"
+    replace_pattern2 = r"-0x7ffefef8"
+
     secret_media_viewer_path = find_smali_file(
         root_directory, "SecretMediaViewer.smali"
     )
     if secret_media_viewer_path:
         apply_regex(
             root_directory, search_pattern, replace_pattern, secret_media_viewer_path
+        )
+        apply_regex(
+            root_directory, search_pattern2, replace_pattern2, secret_media_viewer_path
         )
 
     photo_viewer_path = find_smali_file(root_directory, "PhotoViewer.smali")
@@ -1201,7 +1207,9 @@ def main(selected_patch=None, root_directory=None):
         "18": (
             "Modify isSponsoredDisabled to always return true",
             lambda: automate_modification(
-                root_directory, "MessagesController.smali", modify_is_sponsored_dis_method
+                root_directory,
+                "MessagesController.smali",
+                modify_is_sponsored_dis_method,
             ),
         ),
     }
