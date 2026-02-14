@@ -1,3 +1,5 @@
+#!/data/data/com.termux/files/usr/bin/bash
+
 if ! command -v termux-setup-storage; then
   echo "This script can be executed only on Termux"
   exit 1

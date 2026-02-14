@@ -17,7 +17,7 @@ Additionally, you can find a selection of straightforward scripts on my [gist](h
 
 3. **install_hermes.sh:** Install [hermes](https://github.com/facebook/hermes) on termux easily. Also used in [termux-hermes](https://github.com/AbhiTheModder/termux-hermes)
 
-4. **install_frida.sh:** Install latest [frida](https://github.com/frida/frida.git) on termux.
+4. **install_frida.sh:** Install latest [frida](https://github.com/frida/frida) on termux.
    ```shell
      wget https://maglit.me/frida-python && bash frida-python
    ```
@@ -35,3 +35,4 @@ This repo also hosts the github workflow to automate this script and for version
 9. **cocos2d.py:** Simple script to decrypt cocos2d encrypted `.jsc` files.
 10. **exodus.py:** Simple script to scan apk for trackers using Exodus Privacy API.
 11. **ssl_patch.py:** Patch SSL Verification in APK(s).
+12. **mariana-trench.sh:** Install [facebook/mariana-trench](https://github.com/facebook/mariana-trench) on termux.
