@@ -21,13 +21,13 @@ git clone https://github.com/D-os/libbinder.git --depth 1 && rm -rf libbinder/.g
 
 git clone https://github.com/facebook/mariana-trench.git --depth 1 -b 
 
-mkdir -p "$MARIANA_TRENCH_DIRECTORY/install" && mkdir -p "$MARIANA_TRENCH_DIRECTORY/dependencies"
+mkdir -p "$MT_INSTALL_DIRECTORY" && mkdir -p "$MARIANA_TRENCH_DIRECTORY/dependencies"
 
 cd "$MARIANA_TRENCH_DIRECTORY/dependencies"
 git clone -b 9.1.0 https://github.com/fmtlib/fmt.git --depth 1
 mkdir fmt/build
 cd fmt/build
-cmake -DCMAKE_CXX_STANDARD=17 -DFMT_TEST=OFF -DCMAKE_INSTALL_PREFIX="$MARIANA_TRENCH_DIRECTORY/install" ..
+cmake -DCMAKE_CXX_STANDARD=17 -DFMT_TEST=OFF -DCMAKE_INSTALL_PREFIX="$MT_INSTALL_DIRECTORY" ..
 make -j4
 make install
 
@@ -53,7 +53,7 @@ cd "$MARIANA_TRENCH_DIRECTORY/dependencies"
 git clone https://github.com/facebook/redex.git --depth 1
 mkdir redex/build
 cd redex/build
-cmake -DCMAKE_INSTALL_PREFIX="$MARIANA_TRENCH_DIRECTORY/install" -DCMAKE_CXX_FLAGS="-I$HOME/libbinder/include" ..
+cmake -DCMAKE_INSTALL_PREFIX="$MT_INSTALL_DIRECTORY" -DCMAKE_CXX_FLAGS="-I$HOME/libbinder/include" ..
 make -j4
 make install
 
@@ -61,9 +61,9 @@ cd "$MARIANA_TRENCH_DIRECTORY"
 mkdir build
 cd build
 cmake \
- -DREDEX_ROOT="$MARIANA_TRENCH_DIRECTORY/install" \
- -Dfmt_ROOT="$MARIANA_TRENCH_DIRECTORY/install" \
- -DCMAKE_INSTALL_PREFIX="$MARIANA_TRENCH_DIRECTORY/install" \
+ -DREDEX_ROOT="$MT_INSTALL_DIRECTORY" \
+ -Dfmt_ROOT="$MT_INSTALL_DIRECTORY" \
+ -DCMAKE_INSTALL_PREFIX="$MT_INSTALL_DIRECTORY" \
  ..
 make -j4
 make install
