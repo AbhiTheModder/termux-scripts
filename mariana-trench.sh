@@ -19,7 +19,7 @@ pkg install -y git zlib boost googletest jsoncpp openjdk-17 jsoncpp-static boost
 
 git clone https://github.com/D-os/libbinder.git --depth 1 && rm -rf libbinder/.git/
 
-git clone https://github.com/facebook/mariana-trench.git --depth 1 -b 
+git clone https://github.com/facebook/mariana-trench.git --depth 1
 
 mkdir -p "$MT_INSTALL_DIRECTORY" && mkdir -p "$MARIANA_TRENCH_DIRECTORY/dependencies"
 
