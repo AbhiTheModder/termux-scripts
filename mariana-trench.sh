@@ -81,4 +81,4 @@ if [ ! -f "$DEF_HEURISTICS_PATH" ]; then
  echo "{}" > "$DEF_HEURISTICS_PATH"
 fi
 
-printf "[I] All Done!"
+printf "[I] All Done!\n"
