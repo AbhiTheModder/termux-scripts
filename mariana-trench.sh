@@ -11,7 +11,8 @@ cd "$HOME"
 
 MARIANA_TRENCH_DIRECTORY="$(pwd)/mariana-trench"
 MT_INSTALL_DIRECTORY="$MARIANA_TRENCH_DIRECTORY/install"
-DEF_HEURISTICS_PATH="$PREFIX/share/mariana-trench/configuration/heuristics.json"
+MT_CONFIG_DIR="$PREFIX/share/mariana-trench/configuration"
+DEF_HEURISTICS_PATH="$MT_CONFIG_DIR/heuristics.json"
 
 pkg up -y
 
@@ -75,10 +76,16 @@ python scripts/setup.py \
  install
 
 
+curl -L# -o "$MT_CONFIG_DIR/android.jar" https://github.com/RevEngiSquad/cfr/releases/download/0.153-SNAPSHOT/rt.jar
+ 
 rm -rf "$HOME/libbinder/"
 
 if [ ! -f "$DEF_HEURISTICS_PATH" ]; then
  echo "{}" > "$DEF_HEURISTICS_PATH"
+fi
+
+if [ -f "$MT_CONFIG_DIR/default_system_jar_paths.json" ]; then
+ echo "[\"$MT_CONFIG_DIR/android.jar\"]" > "$MT_CONFIG_DIR/default_system_jar_paths.json"
 fi
 
 printf "[I] All Done!\n"
