@@ -145,7 +145,7 @@ def find_offset(r2, patterns, is_iA=False, arch=None):
                     search_fcn = search_result
                     r2.cmd(f"af @{search_fcn}")
                 print(f"function at: {YELLOW}{search_fcn}{NC}")
-                patch_cmd = "wao ret1" if (arch == "arm64" and idx in (3, 4)) or (arch == "x86" and idx == 5) else "wao ret0"
+                patch_cmd = "wao ret1" if (arch == "arm64" and idx == 3) or (arch == "x86" and idx == 5) else "wao ret0"
                 return search_fcn, patch_cmd
 
 
