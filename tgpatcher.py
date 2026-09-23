@@ -632,27 +632,6 @@ def modify_getCertificateSHA256Fingerprint(file_path):
         print(e)
 
 
-def modify_forcePremium(file_path):
-    """Modify forcePremium method to true.
-    - Though this change feels useless to me most of the time
-    """
-    new_method_code = [
-        ".method static synthetic access$3000(Lorg/telegram/ui/PremiumPreviewFragment;)Z\n",
-        "    .locals 0\n",
-        "    const/4 p0, 0x1\n",
-        "    return p0\n",
-        ".end method\n",
-    ]
-    try:
-        modify_method(
-            file_path,
-            "static synthetic access$3000(Lorg/telegram/ui/PremiumPreviewFragment;)Z",
-            new_method_code,
-        )
-    except NoMethodFoundError as e:
-        print(e)
-
-
 def modify_markStories_method(file_path):
     """Modify markStoryAsRead methods
     - Allows users to 'hide their views' to watched stories
@@ -1112,18 +1091,12 @@ def main(selected_patch=None, root_directory=None):
             ),
         ),
         "4": (
-            "Modify forcePremium method to true",
-            lambda: automate_modification(
-                root_directory, "PremiumPreviewFragment.smali", modify_forcePremium
-            ),
-        ),
-        "5": (
             "Modify markStoryAsRead methods to disable marking stories as read",
             lambda: automate_modification(
                 root_directory, "StoriesController.smali", modify_markStories_method
             ),
         ),
-        "6": (
+        "5": (
             "Modify isPremiumFeatureAvailable method to true",
             lambda: automate_method_modification(
                 root_directory,
@@ -1136,13 +1109,13 @@ def main(selected_patch=None, root_directory=None):
                 modify_isPremiumFeatureAvailable_method,
             ),
         ),
-        "7": (
+        "6": (
             "Modify updateParams method for speed boost",
             lambda: automate_method_modification(
                 root_directory, "private updateParams()V", modify_updateParams_method
             ),
         ),
-        "8": (
+        "7": (
             "Modify isChatNoForwards methods in MessagesController.smali",
             lambda: automate_modification(
                 root_directory,
@@ -1150,7 +1123,7 @@ def main(selected_patch=None, root_directory=None):
                 modify_isChatNoForwards,
             ),
         ),
-        "9": (
+        "8": (
             "Access Banned Channels Patch: Modify checkCanOpenChat methods",
             lambda: automate_modification(
                 root_directory,
@@ -1158,19 +1131,19 @@ def main(selected_patch=None, root_directory=None):
                 modify_checkCanOpenChat,
             ),
         ),
-        "10": (
+        "9": (
             "Access Banned Channels: Apply isRestrictedMessage patch",
             lambda: apply_isRestrictedMessage(root_directory),
         ),
-        "11": (
+        "10": (
             "Apply enableSavingMedia patch",
             lambda: apply_enableSavingMedia(root_directory),
         ),
-        "12": (
+        "11": (
             "Apply premiumLocked patch",
             lambda: apply_premiumLocked(root_directory),
         ),
-        "13": (
+        "12": (
             "Enable Screenshots",
             lambda: (
                 apply_EnableScreenshots(root_directory),
@@ -1178,13 +1151,13 @@ def main(selected_patch=None, root_directory=None):
                 apply_EnableScreenshots3(root_directory),
             ),
         ),
-        "14": (
+        "13": (
             "Modify isSponsored method to always return false",
             lambda: automate_modification(
                 root_directory, "MessageObject.smali", modify_is_sponsored_method
             ),
         ),
-        "15": (
+        "14": (
             "Remove Proxy Sponsored Channels",
             lambda: automate_modification(
                 root_directory,
@@ -1192,19 +1165,19 @@ def main(selected_patch=None, root_directory=None):
                 modify_is_proxy_sponsored_method,
             ),
         ),
-        "16": (
+        "15": (
             "Modify Secret Media methods (for Secret Media Enabler)",
             lambda: automate_modification(
                 root_directory, "MessageObject.smali", modify_secret_media_methods
             ),
         ),
-        "17": (
+        "16": (
             "Apply Anti Messages Delete Patch",
             lambda: automate_modification(
                 root_directory, "MessagesStorage.smali", modify_markMessagesAsDeleted
             ),
         ),
-        "18": (
+        "17": (
             "Modify isSponsoredDisabled to always return true",
             lambda: automate_modification(
                 root_directory,
